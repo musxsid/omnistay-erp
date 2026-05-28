@@ -31,3 +31,24 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore frontend node dependencies
+omnistay-frontend/node_modules/
+omnistay-frontend/build/
+.pnp/
+.pnp.js
+
+# Ignore backend build artifacts
+omnistay-backend/target/
+omnistay-backend/.mvn/
+omnistay-backend/mvnw
+omnistay-backend/mvnw.cmd
+
+# Ignore IDE settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
