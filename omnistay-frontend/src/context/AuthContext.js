@@ -1,14 +1,24 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [viewMode, setViewMode] = useState('public');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [viewMode, setViewMode] = useState('internal');
+  const [loading, setLoading] = useState(true);
 
-  const login = (username, password) => {
-    if (username === 'admin' && password === 'admin123') {
+  useEffect(() => {
+    setIsAuthenticated(localStorage.getItem('isAuth') === 'true');
+    setViewMode(localStorage.getItem('viewMode') || 'internal');
+    setLoading(false);
+  }, []);
+
+  const login = (u, p) => {
+    if (u === 'admin' && p === 'admin123') {
       setIsAuthenticated(true);
+      setViewMode('internal');
+      localStorage.setItem('isAuth', 'true');
+      localStorage.setItem('viewMode', 'internal');
       return true;
     }
     return false;
@@ -16,14 +26,14 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setIsAuthenticated(false);
-    setViewMode('public');
+    setViewMode('internal');
+    localStorage.clear();
   };
 
   return (
-    <AuthContext.Provider value={{ viewMode, setViewMode, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, viewMode, setViewMode, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
 export const useAuth = () => useContext(AuthContext);
