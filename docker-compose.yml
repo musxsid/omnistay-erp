@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # Keycloak OAuth2 / OIDC Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: omnistay-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres_password
+    command: start-dev --http-port 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - omnistay-network
+
+  # PostgreSQL Relational Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: omnistay-postgres
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: omnistay_db,keycloak_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - omnistay-network
+
+  # Redis Distributed Lock & Cache
+  redis:
+    image: redis:7-alpine
+    container_name: omnistay-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - omnistay-network
+
+  # OmniStay ERP Backend Microservice
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: omnistay-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/omnistay_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres_password
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/omnistay-realm
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - omnistay-network
+
+networks:
+  omnistay-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

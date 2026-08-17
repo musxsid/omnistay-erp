@@ -7,52 +7,59 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "folios")
+@Table(name = "reservations")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Folio {
+public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "folio_id")
-    private UUID folioId;
+    @Column(name = "reservation_id")
+    private UUID reservationId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = false)
     private Property property;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id", unique = true)
-    private Reservation reservation;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guest_id", nullable = false)
     private Guest guest;
 
-    @Column(length = 20)
-    @Builder.Default
-    private String status = "ACTIVE";
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_room_id")
+    private Room assignedRoom;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rate_plan_id")
+    private RatePlan ratePlan;
+
+    @Column(name = "confirmation_code", nullable = false, unique = true, length = 30)
+    private String confirmationCode;
 
     @Column(name = "check_in_date", nullable = false)
     private LocalDateTime checkInDate;
 
-    @Column(name = "check_out_date")
+    @Column(name = "check_out_date", nullable = false)
     private LocalDateTime checkOutDate;
 
-    @Column(name = "is_settled")
+    @Column(name = "adult_count")
     @Builder.Default
-    private boolean isSettled = false;
+    private Integer adultCount = 1;
 
-    @Column(name = "total_due", precision = 12, scale = 2)
+    @Column(name = "child_count")
     @Builder.Default
-    private BigDecimal totalDue = BigDecimal.ZERO;
+    private Integer childCount = 0;
 
-    @Column(name = "total_paid", precision = 12, scale = 2)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
     @Builder.Default
-    private BigDecimal totalPaid = BigDecimal.ZERO;
+    private ReservationStatus status = ReservationStatus.PENDING_PAYMENT;
+
+    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal totalAmount;
 
     @Version
     private Long version;

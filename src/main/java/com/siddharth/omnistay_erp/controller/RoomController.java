@@ -6,8 +6,7 @@ import com.siddharth.omnistay_erp.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/rooms")
@@ -24,6 +23,28 @@ public class RoomController {
     @GetMapping
     public List<Room> getAllRooms() {
         return roomService.getAllRooms();
+    }
+
+    @GetMapping("/matrix")
+    public List<Map<String, Object>> getRoomMatrix() {
+        List<Room> rooms = roomService.getAllRooms();
+        List<Map<String, Object>> matrix = new ArrayList<>();
+        
+        for (Room r : rooms) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", r.getRoomId());
+            map.put("roomId", r.getRoomId());
+            map.put("roomNumber", r.getRoomNumber());
+            map.put("roomType", r.getRoomType() != null ? r.getRoomType().getName() : "Standard Single");
+            map.put("type", r.getRoomType() != null ? r.getRoomType().getName() : "Standard Single");
+            map.put("status", r.getStatus() != null ? r.getStatus().name() : "AVAILABLE");
+            map.put("dailyRate", r.getDailyRate());
+            map.put("guest", null);
+            map.put("amount", null);
+            map.put("folioId", null);
+            matrix.add(map);
+        }
+        return matrix;
     }
 
     @PutMapping("/{id}/status")
