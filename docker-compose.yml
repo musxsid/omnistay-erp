@@ -1,6 +1,10 @@
 version: '3.8'
 
 services:
+  # ==========================================
+  # Infrastructure Layer
+  # ==========================================
+
   # Keycloak OAuth2 / OIDC Identity Provider
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
@@ -56,25 +60,121 @@ services:
     networks:
       - omnistay-network
 
-  # OmniStay ERP Backend Microservice
-  backend:
+
+  # ==========================================
+  # Microservices Layer (backend/)
+  # ==========================================
+
+  # 1. API Gateway Microservice
+  api-gateway:
     build:
-      context: .
+      context: ./backend/api-gateway
       dockerfile: Dockerfile
-    container_name: omnistay-backend
+    container_name: omnistay-api-gateway
+    ports:
+      - "8000:8080"
+    depends_on:
+      - reservation-service
+      - ledger-service
+      - pos-service
+      - audit-service
+      - ai-service
+    networks:
+      - omnistay-network
+
+  # 2. Reservation & Property Management Microservice
+  reservation-service:
+    build:
+      context: ./backend/reservation-service
+      dockerfile: Dockerfile
+    container_name: omnistay-reservation-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/omnistay_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres_password
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/omnistay-realm
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
     ports:
-      - "8081:8080"
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - omnistay-network
+
+  # 3. Double-Entry Financial Ledger Microservice
+  ledger-service:
+    build:
+      context: ./backend/ledger-service
+      dockerfile: Dockerfile
+    container_name: omnistay-ledger-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/omnistay_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres_password
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/omnistay-realm
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - omnistay-network
+
+  # 4. Restaurant POS & High-Concurrency Microservice
+  pos-service:
+    build:
+      context: ./backend/pos-service
+      dockerfile: Dockerfile
+    container_name: omnistay-pos-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/omnistay_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres_password
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/omnistay-realm
+    ports:
+      - "8083:8083"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks:
+      - omnistay-network
+
+  # 5. Night Audit Rollover & Dynamic Pricing Microservice
+  audit-service:
+    build:
+      context: ./backend/audit-service
+      dockerfile: Dockerfile
+    container_name: omnistay-audit-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/omnistay_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres_password
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/omnistay-realm
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - omnistay-network
+
+  # 6. Spring AI Operations & Multi-Agent Microservice
+  ai-service:
+    build:
+      context: ./backend/ai-service
+      dockerfile: Dockerfile
+    container_name: omnistay-ai-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/omnistay_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres_password
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/omnistay-realm
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres:
         condition: service_healthy
     networks:
       - omnistay-network

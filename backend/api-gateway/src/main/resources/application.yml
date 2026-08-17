@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: reservation-service-rooms
+          uri: http://reservation-service:8081
+          predicates:
+            - Path=/api/rooms/**
+        - id: reservation-service
+          uri: http://reservation-service:8081
+          predicates:
+            - Path=/api/v1/reservations/**, /api/v1/properties/**
+        - id: ledger-service
+          uri: http://ledger-service:8082
+          predicates:
+            - Path=/api/v1/ledger/**
+        - id: pos-service
+          uri: http://pos-service:8083
+          predicates:
+            - Path=/api/v1/pos/**
+        - id: audit-service
+          uri: http://audit-service:8084
+          predicates:
+            - Path=/api/v1/audit/**
+        - id: ai-service
+          uri: http://ai-service:8085
+          predicates:
+            - Path=/api/v1/ai/**
