@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // Fallback Default Property ID for local testing
 export const DEFAULT_PROPERTY_ID = '00000000-0000-0000-0000-000000000001';
