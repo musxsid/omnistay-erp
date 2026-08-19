@@ -1,24 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 
+import LandingPage from './pages/LandingPage';
+import FindReservePage from './pages/FindReservePage';
 import GuestPortal from './pages/GuestPortal';
-import LoginGateway from './pages/LoginGateway';
 import EnterpriseLayout from './components/layout/EnterpriseLayout';
+import AuthModal from './components/AuthModal';
 
 import './assets/styles/enterprise-theme.css';
 
 function MainRouter() {
-  const { viewMode, isAuthenticated } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
+  const [currentPage, setCurrentPage] = useState('LANDING'); // LANDING, CATALOG
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
-  // 1. If public, show the guest portal
-  if (viewMode === 'public') return <GuestPortal />;
-  
-  // 2. Default entry point is the login screen
-  if (!isAuthenticated) return <LoginGateway />;
+  // 1. Authenticated Staff Users (Admin, Front Desk, Housekeeping, Restaurant POS)
+  if (isAuthenticated && userRole && userRole !== 'GUEST') {
+    return <EnterpriseLayout />;
+  }
 
-  // 3. Authenticated staff
-  return <EnterpriseLayout />;
+  // 2. Authenticated Guest Users -> Guest Hub & Folio Account
+  if (isAuthenticated && userRole === 'GUEST') {
+    return (
+      <>
+        {currentPage === 'CATALOG' ? (
+          <FindReservePage 
+            onOpenAuth={() => setIsAuthOpen(true)}
+            onBackToHome={() => setCurrentPage('LANDING')}
+          />
+        ) : (
+          <GuestPortal onNavigateCatalog={() => setCurrentPage('CATALOG')} />
+        )}
+        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      </>
+    );
+  }
+
+  // 3. Unauthenticated Visitors -> Landing Page or Dedicated Find & Reserve Page
+  return (
+    <>
+      {currentPage === 'CATALOG' ? (
+        <FindReservePage 
+          onOpenAuth={() => setIsAuthOpen(true)}
+          onBackToHome={() => setCurrentPage('LANDING')}
+        />
+      ) : (
+        <LandingPage 
+          onOpenAuth={() => setIsAuthOpen(true)}
+          onNavigateCatalog={() => setCurrentPage('CATALOG')}
+        />
+      )}
+
+      {/* Global Reusable Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthOpen} 
+        onClose={() => setIsAuthOpen(false)} 
+      />
+    </>
+  );
 }
 
 function App() {

@@ -1,34 +1,112 @@
 import React from 'react';
+import BrandLogo from './BrandLogo';
+import { useAuth } from '../context/AuthContext';
 
-const Sidebar = ({ activeTab, setActiveTab }) => (
-  <aside className="sidebar">
-    <div className="sidebar-brand">
-      <div className="brand-text">OmniStay</div>
-    </div>
-    <nav className="sidebar-nav">
-      <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>Overview Metrics</button>
-      <button className={activeTab === 'rooms' ? 'active' : ''} onClick={() => setActiveTab('rooms')}>Room Management</button>
-      <button className={activeTab === 'pos' ? 'active' : ''} onClick={() => setActiveTab('pos')}>Restaurant POS</button>
-      
-      {/* NEW: Admin Panel Navigation Button */}
-      <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>Admin Settings</button>
-      
-      {/* NEW: AI Concierge Navigation Button */}
-      <button 
-        className={activeTab === 'ai' ? 'active' : ''} 
-        onClick={() => setActiveTab('ai')}
-        style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}
-      >
-        ✨ AI Concierge
-      </button>
-      <button 
-  className={`nav-item ${currentView === 'bookings' ? 'active' : ''}`}
-  onClick={() => setViewMode('bookings')} // Or whichever state handler changes your main view area
->
-  <span>📅</span> Bookings Log
-</button>
-    </nav>
-  </aside>
-);
+const Sidebar = ({ activeTab, setActiveTab }) => {
+  const { userRole, userEmail, userPhone } = useAuth();
+
+  const getNavItems = () => {
+    if (userRole === 'STAFF_FRONTDESK') {
+      return [
+        { id: 'dashboard', label: 'Works Overview' },
+        { id: 'rooms', label: 'Front Desk & Matrix' },
+        { id: 'bookings', label: 'Bookings Log' }
+      ];
+    }
+    if (userRole === 'STAFF_HOUSEKEEPING') {
+      return [
+        { id: 'dashboard', label: 'Works Overview' },
+        { id: 'rooms', label: 'Cleaning Matrix & Housekeeping' }
+      ];
+    }
+    if (userRole === 'STAFF_RESTAURANT') {
+      return [
+        { id: 'pos', label: 'Restaurant POS & Folio' }
+      ];
+    }
+    // ADMIN
+    return [
+      { id: 'dashboard', label: 'Works Overview' },
+      { id: 'rooms', label: 'Room Matrix' },
+      { id: 'pos', label: 'Restaurant POS' },
+      { id: 'bookings', label: 'Bookings Log' }
+    ];
+  };
+
+  const getAdminItems = () => {
+    if (userRole === 'ADMIN') {
+      return [
+        { id: 'admin', label: 'System Admin' },
+        { id: 'ai', label: 'AI Concierge' }
+      ];
+    }
+    return [];
+  };
+
+  const getRoleTitle = () => {
+    switch (userRole) {
+      case 'STAFF_FRONTDESK': return 'Front Desk Lead';
+      case 'STAFF_HOUSEKEEPING': return 'Housekeeping Executive';
+      case 'STAFF_RESTAURANT': return 'F&B Restaurant Manager';
+      default: return 'General Manager (Admin)';
+    }
+  };
+
+  const navItems = getNavItems();
+  const adminItems = getAdminItems();
+
+  return (
+    <aside className="sidebar">
+      {/* Brand Header */}
+      <div>
+        <div style={{ paddingBottom: '20px', borderBottom: '1px solid var(--border-light)', marginBottom: '20px' }}>
+          <BrandLogo subtitle="ENTERPRISE ERP" size="small" />
+        </div>
+
+        {/* Primary Navigation */}
+        <nav className="sidebar-nav">
+          <div className="sidebar-heading">Operational Realm</div>
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              className={`nav-item-btn ${activeTab === item.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(item.id)}
+            >
+              <span>{item.label}</span>
+            </button>
+          ))}
+
+          {adminItems.length > 0 && (
+            <>
+              <div className="sidebar-heading" style={{ marginTop: '20px' }}>Management & AI</div>
+              {adminItems.map((item) => (
+                <button
+                  key={item.id}
+                  className={`nav-item-btn ${activeTab === item.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(item.id)}
+                >
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </>
+          )}
+        </nav>
+      </div>
+
+      {/* User Profile Badge */}
+      <div className="sidebar-footer">
+        <div className="user-profile-badge">
+          <div className="avatar-circle">
+            {userEmail ? userEmail.substring(0, 2).toUpperCase() : 'SK'}
+          </div>
+          <div className="user-info">
+            <span className="user-name" style={{ fontSize: '0.78rem' }}>{userEmail || userPhone || 'Staff User'}</span>
+            <span className="user-role" style={{ fontSize: '0.7rem' }}>{getRoleTitle()}</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+};
 
 export default Sidebar;

@@ -1,74 +1,96 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
+import Sidebar from '../Sidebar';
 import DashboardView from './DashboardView'; 
 import PosScreen from '../PosScreen'; 
 import RoomMatrix from '../RoomMatrix';
 import AiConcierge from '../../pages/AiConcierge';
 import AdminDashboard from '../../pages/AdminDashboard'; 
-import BookingsDashboard from '../../pages/BookingsDashboard'; // NEW: Import Bookings Dashboard Module
+import BookingsDashboard from '../../pages/BookingsDashboard';
 
 const EnterpriseLayout = () => {
-  const { logout } = useAuth();
-  const { fetchEnterpriseData } = useData();
+  const { logout, userRole } = useAuth();
+  const { fetchEnterpriseData, properties, selectedPropertyId, setSelectedPropertyId } = useData();
+  
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    if (userRole === 'STAFF_RESTAURANT') {
+      setActiveTab('pos');
+    } else {
+      setActiveTab('dashboard');
+    }
+  }, [userRole]);
 
   return (
     <div className="enterprise-layout">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-            <div className="brand-icon">◱</div>
-            <div className="brand-text">OmniStay ERP</div>
-        </div>
-        <nav className="sidebar-nav">
-          <div className="sidebar-heading">Operations</div>
-          <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>Command Center</button>
-          
-          <button className={activeTab === 'rooms' ? 'active' : ''} onClick={() => setActiveTab('rooms')}>Room Matrix</button>
-          
-          <button className={activeTab === 'pos' ? 'active' : ''} onClick={() => setActiveTab('pos')}>Restaurant POS</button>
+      {/* Sidebar Component */}
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          {/* NEW: Bookings Log Sidebar Navigation Option */}
-          <button className={activeTab === 'bookings' ? 'active' : ''} onClick={() => setActiveTab('bookings')}>📅 Bookings Log</button>
-
-          <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>Admin Settings</button>
-          
-          <button 
-            className={activeTab === 'ai' ? 'active' : ''} 
-            onClick={() => setActiveTab('ai')}
-            style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}
-          >
-            ✨ AI Concierge
-          </button>
-        </nav>
-      </aside>
-
+      {/* Main Content Area */}
       <main className="content-area">
+        {/* Top Header */}
         <header className="top-header">
-          <input type="text" className="search-bar" placeholder="Search parameters..." />
-          <div className="profile-section">
-            <button className="apple-btn secondary" onClick={fetchEnterpriseData}>Sync Database</button>
-            <button className="apple-btn text-only" onClick={logout} style={{color: '#ef4444'}}>End Session</button>
+          <div className="search-input-wrapper">
+            <input 
+              type="text" 
+              className="search-bar-input" 
+              placeholder="Search works, rooms, guests, folios..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="header-right-actions">
+            {/* Multi-Property Switcher Badge */}
+            <select
+              className="header-badge-btn active-property"
+              value={selectedPropertyId}
+              onChange={(e) => setSelectedPropertyId(e.target.value)}
+              style={{ border: '1px solid var(--border-subtle)', outline: 'none', background: 'var(--bg-app)', fontWeight: 800 }}
+            >
+              <option value="00000000-0000-0000-0000-000000000001">Vargarammoota Grand Resort</option>
+              <option value="00000000-0000-0000-0000-000000000002">Aman Ocean Residence</option>
+              <option value="00000000-0000-0000-0000-000000000003">St. Moritz Alpine Chalet</option>
+            </select>
+
+            {/* RevPAR & ADR Badges */}
+            <div className="header-badge-btn" style={{ background: 'var(--primary-azure-light)', color: 'var(--primary-azure)', borderColor: 'var(--primary-azure)', fontWeight: 800 }}>
+              ADR: $420 • RevPAR: $368
+            </div>
+
+            {/* Sync Live Data */}
+            <button className="btn-outline-pill" style={{ padding: '6px 14px', fontSize: '0.75rem' }} onClick={fetchEnterpriseData} title="Sync Live Data">
+              Sync Data
+            </button>
+
+            {/* Sign Out */}
+            <button 
+              className="btn-outline-pill" 
+              onClick={logout} 
+              style={{ color: 'var(--text-main)', borderColor: 'var(--border-subtle)' }}
+            >
+              Sign Out
+            </button>
           </div>
         </header>
 
+        {/* Main Content View Container */}
         <div className="main-scroll">
           {activeTab === 'dashboard' && <DashboardView />}
-          
           {activeTab === 'rooms' && <RoomMatrix />}
-
-          {/* NEW: Render Route Condition for Active Bookings View Layout */}
           {activeTab === 'bookings' && <BookingsDashboard />}
-
           {activeTab === 'admin' && <AdminDashboard />}
-          
           {activeTab === 'ai' && <AiConcierge />}
-          
           {activeTab === 'pos' && (
-            <div style={{width: '100%', maxWidth: '1000px'}}>
-              <div className="page-title">
-                <h2>Point of Sale</h2>
-                <p>Restaurant and amenities billing.</p>
+            <div>
+              <div className="page-header-row" style={{ marginBottom: '24px' }}>
+                <div className="greeting-text">
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-main)' }}>Restaurant POS & Services</h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>Direct amenity order processing & guest folio posting.</p>
+                </div>
               </div>
               <PosScreen />
             </div>
