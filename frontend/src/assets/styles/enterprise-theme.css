@@ -51,9 +51,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Headings Typography - Playfair Display Luxury Serif */
-h1, h2, h3, .hero-heading, .section-title, .brand-title {
+/* Headings Typography - Playfair Display Luxury Serif (Landing Page Only) */
+.landing-page h1, 
+.landing-page h2, 
+.landing-page h3, 
+.hero-heading, 
+.section-title {
   font-family: 'Playfair Display', 'Georgia', serif;
+}
+
+/* Operational Staff Command Center Layout - Clean Normal Sans-Serif */
+.enterprise-layout,
+.enterprise-layout h1,
+.enterprise-layout h2,
+.enterprise-layout h3,
+.enterprise-layout h4,
+.enterprise-layout h5,
+.enterprise-layout h6,
+.enterprise-layout button,
+.enterprise-layout input,
+.enterprise-layout select,
+.enterprise-layout div,
+.enterprise-layout span {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
 }
 
 /* White Cards & Buttons */
@@ -142,6 +162,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .form-input-custom:focus, .form-select-custom:focus, input[type="date"]:focus, select:focus, textarea:focus {
   border-color: var(--primary-azure);
   box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.15);
+}
+
+/* Disable yellow browser autofill background on inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Amber Gold Stars */
@@ -296,7 +326,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: #FFFFFF;
 }
 
-.white-hero-search-bar button {
+.white-hero-search-bar > button {
   height: 42px;
   margin-top: 18px; /* Perfectly aligned with field labels */
 }
@@ -611,8 +641,325 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
+/* Layout & Sidebar Rules - Sharp Enterprise Theme */
 .enterprise-layout {
-  display: grid;
-  grid-template-columns: 260px 1fr;
+  display: flex;
   min-height: 100vh;
+  background-color: var(--bg-app);
+}
+
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-subtle);
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-heading {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+  padding-left: 10px;
+}
+
+.nav-item-btn {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  margin-bottom: 6px;
+}
+
+.nav-item-btn:hover {
+  background: var(--border-light);
+  border-color: var(--primary-azure);
+  color: var(--primary-azure);
+}
+
+.nav-item-btn.active {
+  background: var(--primary-azure-light);
+  color: var(--primary-azure);
+  border: 1px solid var(--primary-azure);
+  font-weight: 800;
+}
+
+.sidebar-footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.user-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  background: var(--primary-azure);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-name {
+  font-weight: 800;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Content Area & Top Header */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg-app);
+}
+
+.top-header {
+  height: 64px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.search-input-wrapper {
+  flex: 1;
+  max-width: 380px;
+}
+
+.search-bar-input {
+  width: 100%;
+  padding: 8px 14px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.82rem;
+  color: var(--text-main);
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: border-color 0.15s ease;
+}
+
+.search-bar-input:focus {
+  border-color: var(--primary-azure);
+  background: #FFFFFF;
+}
+
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-badge-btn {
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+}
+
+.main-scroll {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+}
+
+/* Dashboard & Metric Grids - Sharp Enterprise Theme */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.stat-card-widget {
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-top: 3px solid var(--primary-azure);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.stat-card-widget:hover {
+  border-color: var(--primary-azure);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.stat-icon-wrapper {
+  width: 38px;
+  height: 38px;
+  background: var(--primary-azure-light);
+  color: var(--primary-azure);
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 132, 255, 0.25);
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.stat-trend {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-trend.up {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.stat-trend.down {
+  background: rgba(0, 132, 255, 0.08);
+  color: var(--primary-azure);
+  border: 1px solid rgba(0, 132, 255, 0.2);
+}
+
+.charts-split-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .charts-split-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Modern Tables */
+.modern-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.modern-table th {
+  background: var(--bg-app);
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modern-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(0, 132, 255, 0.1);
+  color: var(--primary-azure);
+  border: 1px solid rgba(0, 132, 255, 0.25);
+}
+
+.status-pill.approved {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.status-pill.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #D97706;
+  border-color: rgba(245, 158, 11, 0.25);
 }

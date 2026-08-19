@@ -5,10 +5,14 @@ const LoginGateway = () => {
   const { login, setViewMode } = useAuth();
   const [form, setForm] = useState({ username: '', password: '' });
   const [mode, setMode] = useState('select'); 
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleAdminSubmit = (e) => {
     e.preventDefault();
-    if (!login(form.username, form.password)) alert("Access Denied: Invalid credentials.");
+    if (!login(form.username, form.password)) {
+      setErrorMsg("Access Denied: Invalid credentials.");
+      return;
+    }
   };
 
   return (

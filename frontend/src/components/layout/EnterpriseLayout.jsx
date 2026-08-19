@@ -8,6 +8,7 @@ import RoomMatrix from '../RoomMatrix';
 import AiConcierge from '../../pages/AiConcierge';
 import AdminDashboard from '../../pages/AdminDashboard'; 
 import BookingsDashboard from '../../pages/BookingsDashboard';
+import CustomModal from '../CustomModal';
 
 const EnterpriseLayout = () => {
   const { logout, userRole } = useAuth();
@@ -16,9 +17,16 @@ const EnterpriseLayout = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Sign out confirmation modal state
+  const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
+
   useEffect(() => {
     if (userRole === 'STAFF_RESTAURANT') {
       setActiveTab('pos');
+    } else if (userRole === 'STAFF_HOUSEKEEPING') {
+      setActiveTab('rooms');
+    } else if (userRole === 'ADMIN') {
+      setActiveTab('admin');
     } else {
       setActiveTab('dashboard');
     }
@@ -66,10 +74,10 @@ const EnterpriseLayout = () => {
               Sync Data
             </button>
 
-            {/* Sign Out */}
+            {/* Sign Out with Confirmation Modal */}
             <button 
               className="btn-outline-pill" 
-              onClick={logout} 
+              onClick={() => setIsSignOutModalOpen(true)} 
               style={{ color: 'var(--text-main)', borderColor: 'var(--border-subtle)' }}
             >
               Sign Out
@@ -97,6 +105,18 @@ const EnterpriseLayout = () => {
           )}
         </div>
       </main>
+
+      {/* Custom Theme-Matching Sign Out Confirmation Modal */}
+      <CustomModal 
+        isOpen={isSignOutModalOpen}
+        type="CONFIRM"
+        title="Confirm Operational Sign Out"
+        message="Are you sure you want to sign out of the OmniStay ERP Enterprise System?"
+        confirmText="Sign Out Now"
+        cancelText="Cancel"
+        onConfirm={() => logout()}
+        onClose={() => setIsSignOutModalOpen(false)}
+      />
     </div>
   );
 };

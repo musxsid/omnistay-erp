@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import BrandLogo from '../components/BrandLogo';
+import DatePicker from '../components/DatePicker';
 import { useHotelData } from '../services/hotelDataStore';
 
 const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
@@ -66,18 +67,17 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
                 <option value="St. Moritz Alpine Chalet">St. Moritz Alpine Chalet</option>
               </select>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                Check-In Date
-              </label>
-              <input type="date" className="form-input-custom" value={checkIn} onChange={e => setCheckIn(e.target.value)} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                Check-Out Date
-              </label>
-              <input type="date" className="form-input-custom" value={checkOut} onChange={e => setCheckOut(e.target.value)} />
-            </div>
+            <DatePicker 
+              label="Check-In Date" 
+              value={checkIn} 
+              onChange={setCheckIn} 
+            />
+            <DatePicker 
+              label="Check-Out Date" 
+              value={checkOut} 
+              onChange={setCheckOut} 
+              minDate={checkIn}
+            />
             <div>
               <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 Category Filter
@@ -168,14 +168,17 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
                   <input type="text" required className="form-input-custom" placeholder="siddharth@gmail.com" />
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textTransform: 'uppercase' }}>Check-In</label>
-                    <input type="date" className="form-input-custom" value={checkIn} onChange={e => setCheckIn(e.target.value)} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textTransform: 'uppercase' }}>Check-Out</label>
-                    <input type="date" className="form-input-custom" value={checkOut} onChange={e => setCheckOut(e.target.value)} />
-                  </div>
+                  <DatePicker 
+                    label="Check-In" 
+                    value={checkIn} 
+                    onChange={setCheckIn} 
+                  />
+                  <DatePicker 
+                    label="Check-Out" 
+                    value={checkOut} 
+                    onChange={setCheckOut} 
+                    minDate={checkIn}
+                  />
                 </div>
                 <button className="btn-primary-azure" style={{ width: '100%', justifyContent: 'center', padding: '14px', marginTop: '10px' }}>
                   Confirm Reservation & Generate Folio

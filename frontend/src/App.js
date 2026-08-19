@@ -14,6 +14,12 @@ function MainRouter() {
   const { isAuthenticated, userRole } = useAuth();
   const [currentPage, setCurrentPage] = useState('LANDING'); // LANDING, CATALOG
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [defaultAuthRole, setDefaultAuthRole] = useState('GUEST');
+
+  const handleOpenAuth = (role = 'GUEST') => {
+    setDefaultAuthRole(role);
+    setIsAuthOpen(true);
+  };
 
   // 1. Authenticated Staff Users (Admin, Front Desk, Housekeeping, Restaurant POS)
   if (isAuthenticated && userRole && userRole !== 'GUEST') {
@@ -26,13 +32,16 @@ function MainRouter() {
       <>
         {currentPage === 'CATALOG' ? (
           <FindReservePage 
-            onOpenAuth={() => setIsAuthOpen(true)}
+            onOpenAuth={handleOpenAuth}
             onBackToHome={() => setCurrentPage('LANDING')}
           />
         ) : (
-          <GuestPortal onNavigateCatalog={() => setCurrentPage('CATALOG')} />
+          <GuestPortal 
+            onNavigateCatalog={() => setCurrentPage('CATALOG')}
+            onOpenAuthModal={handleOpenAuth}
+          />
         )}
-        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+        <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} defaultRole={defaultAuthRole} />
       </>
     );
   }
@@ -42,12 +51,12 @@ function MainRouter() {
     <>
       {currentPage === 'CATALOG' ? (
         <FindReservePage 
-          onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenAuth={handleOpenAuth}
           onBackToHome={() => setCurrentPage('LANDING')}
         />
       ) : (
         <LandingPage 
-          onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenAuth={handleOpenAuth}
           onNavigateCatalog={() => setCurrentPage('CATALOG')}
         />
       )}
@@ -56,6 +65,7 @@ function MainRouter() {
       <AuthModal 
         isOpen={isAuthOpen} 
         onClose={() => setIsAuthOpen(false)} 
+        defaultRole={defaultAuthRole}
       />
     </>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import BrandLogo from '../components/BrandLogo';
+import DatePicker from '../components/DatePicker';
 import { useHotelData } from '../services/hotelDataStore';
 
 // Hero Background Image Slideshow (Auto-Rotating with Smooth Crossfade)
@@ -152,7 +153,7 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
       </nav>
 
       {/* 2. Full-Bleed Hero Section with Crossfading Auto-Rotating Background Carousel & Compact Search Bar */}
-      <section className="hero-omnistay-section" style={{ position: 'relative', overflow: 'hidden' }}>
+      <section className="hero-omnistay-section" style={{ position: 'relative' }}>
         {/* Crossfading Hero Background Image Carousel */}
         {heroBackgroundImages.map((heroImg, idx) => (
           <div
@@ -197,14 +198,17 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
               <option value="St. Moritz Alpine Chalet">St. Moritz Alpine Chalet</option>
             </select>
           </div>
-          <div>
-            <label>Check-In Date</label>
-            <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} />
-          </div>
-          <div>
-            <label>Check-Out Date</label>
-            <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} />
-          </div>
+          <DatePicker 
+            label="Check-In Date" 
+            value={checkIn} 
+            onChange={setCheckIn} 
+          />
+          <DatePicker 
+            label="Check-Out Date" 
+            value={checkOut} 
+            onChange={setCheckOut} 
+            minDate={checkIn}
+          />
           <div>
             <label>Guests & Accommodations</label>
             <select value={guestSelection} onChange={e => setGuestSelection(e.target.value)}>

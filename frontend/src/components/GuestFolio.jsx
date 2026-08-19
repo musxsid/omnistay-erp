@@ -51,7 +51,7 @@ const GuestFolio = ({ folioId, selectedRoom, onClose }) => {
       setSettledInvoice(invoice);
       setFolio(prev => ({ ...prev, isSettled: true, totalDue: 0 }));
     } catch (err) {
-      alert('Settlement failed: ' + err.message);
+      setError('Settlement failed: ' + err.message);
     } finally {
       setIsSettling(false);
     }
