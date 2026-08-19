@@ -314,7 +314,7 @@ const AuthModal = ({ isOpen, onClose, defaultRole = 'GUEST' }) => {
               }}
               onClick={() => fillDemoCredentials('STAFF_HOUSEKEEPING')}
             >
-              🧹 Cleaning
+              🧹 Housekeeping
             </button>
             <button
               type="button"

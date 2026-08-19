@@ -51,10 +51,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Headings Typography - Playfair Display Luxury Serif (Landing Page Only) */
+/* Headings Typography - Playfair Display Luxury Serif (Landing Page & Guest Portal) */
 .landing-page h1, 
 .landing-page h2, 
 .landing-page h3, 
+.portal-container h1,
+.portal-container h2,
+.portal-container h3,
 .hero-heading, 
 .section-title {
   font-family: 'Playfair Display', 'Georgia', serif;
@@ -962,4 +965,99 @@ input:-webkit-autofill:active {
   background: rgba(245, 158, 11, 0.1);
   color: #D97706;
   border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* Print Receipt Media Styles */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 15mm;
+  }
+
+  html, body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Hide app navigation chrome & screen background content marked with no-print */
+  .sidebar,
+  .top-header,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Layout containers reset for single-page print flow */
+  .enterprise-layout,
+  .content-area {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #FFFFFF !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .auth-modal-overlay {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: #FFFFFF !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .printable-invoice-modal {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .modern-table-container {
+    max-height: none !important;
+    overflow: visible !important;
+    border: 1px solid #CBD5E1 !important;
+    width: 100% !important;
+  }
+
+  .modern-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .modern-table tr,
+  .modern-table th,
+  .modern-table td {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    padding: 10px 14px !important;
+  }
+
+  /* Prevent text content truncation/cutting across page boundaries */
+  div, p, h1, h2, h3, h4, table, tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 }

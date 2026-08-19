@@ -3,6 +3,8 @@ import BrandLogo from '../components/BrandLogo';
 import DatePicker from '../components/DatePicker';
 import { useHotelData } from '../services/hotelDataStore';
 
+import SuiteDetailsModal from '../components/SuiteDetailsModal';
+
 const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
   const { suites } = useHotelData();
 
@@ -10,6 +12,7 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
   const [searchLocation, setSearchLocation] = useState('Vargarammoota Grand Resort');
   const [checkIn, setCheckIn] = useState('2026-08-20');
   const [checkOut, setCheckOut] = useState('2026-08-25');
+  const [previewSuite, setPreviewSuite] = useState(null);
   const [selectedSuite, setSelectedSuite] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
@@ -18,6 +21,7 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
     : suites.filter(item => item.category === categoryFilter);
 
   const handleBookNow = (item) => {
+    setPreviewSuite(null);
     setSelectedSuite(item);
   };
 
@@ -52,7 +56,7 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
           <span className="status-pill blue" style={{ marginBottom: '12px' }}>OmniStay Inventory Catalog</span>
           <h1 style={{ fontSize: '2.8rem', fontWeight: 800, marginBottom: '10px', fontFamily: "'Playfair Display', serif" }}>Find & Reserve Your Suite</h1>
           <p style={{ color: '#94A3B8', fontSize: '1rem' }}>
-            Explore available luxury suites, private lagoon villas, and wellness amenities with real-time rate verification.
+            Explore available luxury suites, private lagoon villas, and wellness amenities with real-time rate verification. Click any suite card to view full architectural details & site photo gallery.
           </p>
 
           {/* Custom Search Filter Card */}
@@ -92,16 +96,34 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
         </div>
       </div>
 
+      {/* Full Suite Interactive Details Showcase Modal */}
+      {previewSuite && (
+        <SuiteDetailsModal 
+          suite={previewSuite}
+          onClose={() => setPreviewSuite(null)}
+          onAction={(s) => handleBookNow(s)}
+          actionText="Reserve This Luxury Suite"
+        />
+      )}
+
       {/* Catalog Items Grid */}
       <div style={{ maxWidth: '1320px', margin: '50px auto 100px', padding: '0 40px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
           {filteredItems.map(item => (
-            <div key={item.id} className="white-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div 
+              key={item.id} 
+              className="white-card" 
+              style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+              onClick={() => setPreviewSuite(item)}
+            >
               <div>
                 <div style={{ height: '240px', position: 'relative', overflow: 'hidden' }}>
                   <img src={item.image} alt={item.title} className="hover-zoom-img" />
                   <span className="status-pill available" style={{ position: 'absolute', top: '14px', right: '14px' }}>
                     {item.category}
+                  </span>
+                  <span style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(15,23,42,0.75)', color: '#FFFFFF', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, backdropFilter: 'blur(4px)' }}>
+                    📷 Click to View 4 Site Photos
                   </span>
                 </div>
                 <div style={{ padding: '24px' }}>
@@ -128,7 +150,13 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
                   <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', fontFamily: "'Playfair Display', serif" }}>${item.price}</span>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}> / night</span>
                 </div>
-                <button className="btn-primary-azure" onClick={() => handleBookNow(item)}>
+                <button 
+                  className="btn-primary-azure" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBookNow(item);
+                  }}
+                >
                   Reserve Suite
                 </button>
               </div>

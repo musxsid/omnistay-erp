@@ -28,15 +28,23 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
     onConfirm: null
   });
 
-  const openCustomAlert = (title, message, type = 'WARNING') => {
+  const openCustomAlert = (title, message, type = 'WARNING', confirmText = 'UNDERSTAND & CONTINUE', onConfirm = null) => {
     setModalConfig({
       isOpen: true,
       type,
       title,
       message,
-      confirmText: 'OK',
-      onConfirm: null
+      confirmText,
+      onConfirm
     });
+  };
+
+  const redirectToReservation = () => {
+    if (!guestActiveRoom) {
+      setActivePage('BOOKINGS_HISTORY');
+      showNotification("📅 Please submit a suite reservation request to activate in-room concierge services.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const openSignOutConfirm = () => {
@@ -145,7 +153,9 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
       openCustomAlert(
         "Active Room Required",
         "⚠️ Active Occupied Room Required: Please check in or wait for Front Desk booking approval to order in-room dining.",
-        "WARNING"
+        "WARNING",
+        "UNDERSTAND & CONTINUE",
+        redirectToReservation
       );
       return;
     }
@@ -166,7 +176,9 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
       openCustomAlert(
         "Active Room Required",
         "⚠️ Active Occupied Room Required: Please check in or wait for Front Desk booking approval to book spa services.",
-        "WARNING"
+        "WARNING",
+        "UNDERSTAND & CONTINUE",
+        redirectToReservation
       );
       return;
     }
@@ -187,7 +199,9 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
       openCustomAlert(
         "Active Room Required",
         "⚠️ Active Occupied Room Required: Please check in to request housekeeping amenities.",
-        "WARNING"
+        "WARNING",
+        "UNDERSTAND & CONTINUE",
+        redirectToReservation
       );
       return;
     }
@@ -497,7 +511,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
               <span style={{ background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.3)', color: '#38BDF8', padding: '6px 16px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '16px', display: 'inline-block' }}>
                 Thank You For Staying With OmniStay Luxury Resorts
               </span>
-              <h1 style={{ fontSize: '2.6rem', fontWeight: 900, margin: '0 0 12px 0', letterSpacing: '-0.8px', lineHeight: '1.15', color: '#FFFFFF' }}>
+              <h1 style={{ fontSize: '2.6rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", margin: '0 0 12px 0', letterSpacing: '-0.5px', lineHeight: '1.2', color: '#FFFFFF' }}>
                 Welcome to Your Private Concierge Sanctuary, {guestDisplayName}!
               </h1>
               <p style={{ color: '#94A3B8', fontSize: '0.98rem', margin: '0 0 28px 0', lineHeight: '1.6', maxWidth: '640px' }}>
@@ -507,24 +521,24 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
               <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                 <button 
                   className="btn-primary-azure" 
-                  style={{ padding: '14px 28px', borderRadius: '30px', fontSize: '0.88rem', fontWeight: 800 }}
+                  style={{ padding: '14px 28px', borderRadius: '30px', fontSize: '0.85rem', fontWeight: 800 }}
                   onClick={() => setActivePage('DINING')}
                 >
-                  🍷 Order In-Room Dining →
+                  Order In-Room Dining &rarr;
                 </button>
                 <button 
                   className="btn-outline-pill" 
-                  style={{ padding: '14px 28px', borderRadius: '30px', fontSize: '0.88rem', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.25)' }}
+                  style={{ padding: '14px 28px', borderRadius: '30px', fontSize: '0.85rem', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.25)' }}
                   onClick={() => setActivePage('FOLIO')}
                 >
-                  🛋️ View Room Folio Bill
+                  View Room Folio Bill
                 </button>
                 <button 
                   className="btn-outline-pill" 
-                  style={{ padding: '14px 28px', borderRadius: '30px', fontSize: '0.88rem', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.25)' }}
+                  style={{ padding: '14px 28px', borderRadius: '30px', fontSize: '0.85rem', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.25)' }}
                   onClick={() => setActivePage('HOUSEKEEPING')}
                 >
-                  🛎️ Housekeeping Amenities
+                  Housekeeping Amenities
                 </button>
               </div>
             </div>
@@ -540,7 +554,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
               </div>
 
               <div style={{ fontSize: '0.85rem', color: '#E2E8F0', fontWeight: 700, marginBottom: '16px' }}>
-                {roomNum ? `Checked-In: Suite ${roomNum}` : guestPendingRequest ? '🔔 Booking Under Review' : 'No Active Stay Checked-In'}
+                {roomNum ? `Checked-In: Suite ${roomNum}` : guestPendingRequest ? 'Booking Under Review' : 'No Active Stay Checked-In'}
               </div>
 
               <button 
@@ -555,7 +569,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
           {/* Quick Concierge Feature Showcase Grid */}
           <div style={{ margin: '40px 0 20px 0' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0F172A', marginBottom: '8px', letterSpacing: '-0.3px' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A', marginBottom: '8px', letterSpacing: '-0.3px' }}>
               Resort Experience & Concierge Offerings
             </h2>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
@@ -575,7 +589,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
                 </div>
                 <div style={{ padding: '20px' }}>
                   <span className="status-pill blue" style={{ fontSize: '0.68rem', marginBottom: '6px' }}>Gourmet Cuisine</span>
-                  <h3 style={{ margin: '4px 0 6px 0', fontSize: '1.15rem', fontWeight: 800 }}>🍷 Azure Michelin In-Room Dining</h3>
+                  <h3 style={{ margin: '4px 0 6px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif" }}>Azure Michelin In-Room Dining</h3>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4' }}>
                     Truffle Wagyu, Caviar, and Dom Pérignon delivered directly to your suite.
                   </p>
@@ -593,7 +607,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
                 </div>
                 <div style={{ padding: '20px' }}>
                   <span className="status-pill blue" style={{ fontSize: '0.68rem', marginBottom: '6px' }}>Hydrotherapy</span>
-                  <h3 style={{ margin: '4px 0 6px 0', fontSize: '1.15rem', fontWeight: 800 }}>🌿 Mineral Spa & Wellness Rituals</h3>
+                  <h3 style={{ margin: '4px 0 6px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif" }}>Mineral Spa & Wellness Rituals</h3>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4' }}>
                     Hot stone massages, aromatherapy facials, and private infinity pools.
                   </p>
@@ -611,7 +625,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
                 </div>
                 <div style={{ padding: '20px' }}>
                   <span className="status-pill blue" style={{ fontSize: '0.68rem', marginBottom: '6px' }}>24/7 Butler</span>
-                  <h3 style={{ margin: '4px 0 6px 0', fontSize: '1.15rem', fontWeight: 800 }}>🛎️ In-Room Housekeeping Amenities</h3>
+                  <h3 style={{ margin: '4px 0 6px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif" }}>In-Room Housekeeping Amenities</h3>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4' }}>
                     Plush pillow menus, fresh Egyptian towels, turndown lavender mist, and valet pressing.
                   </p>
@@ -629,7 +643,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
                 </div>
                 <div style={{ padding: '20px' }}>
                   <span className="status-pill blue" style={{ fontSize: '0.68rem', marginBottom: '6px' }}>Luxury Suites</span>
-                  <h3 style={{ margin: '4px 0 6px 0', fontSize: '1.15rem', fontWeight: 800 }}>📜 Suite Bookings & Past Receipts</h3>
+                  <h3 style={{ margin: '4px 0 6px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif" }}>Suite Bookings & Past Receipts</h3>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4' }}>
                     Reserve ocean penthouses and view past settled stay invoices with downloadable receipts.
                   </p>
@@ -648,7 +662,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
           <div style={{ marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <div>
               <span className="status-pill blue" style={{ marginBottom: '8px', display: 'inline-block' }}>Live Room Folio Statement</span>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
                 Itemized Room Charges & Statement
               </h2>
             </div>
@@ -664,8 +678,8 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
             {/* Left: Itemized Charges Table */}
             <div className="white-card" style={{ borderRadius: '20px', padding: '28px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#0F172A' }}>
-                  📜 Line Item Charges {roomNum ? `(Suite ${roomNum})` : ''}
+                <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>
+                  Line Item Charges {roomNum ? `(Suite ${roomNum})` : ''}
                 </h3>
                 <span className="status-pill blue" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>
                   {currentFolioTxns.length} Line Items
@@ -676,8 +690,8 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
                 <div style={{ textAlign: 'center', padding: '48px 24px', background: '#F8FAFC', borderRadius: '16px', border: '1px dashed #CBD5E1' }}>
                   {guestPendingRequest ? (
                     <div>
-                      <h4 style={{ color: '#B45309', margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: 900 }}>
-                        🔔 Reservation Under Review
+                      <h4 style={{ color: '#B45309', margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif" }}>
+                        Reservation Under Review
                       </h4>
                       <p style={{ margin: '0 0 16px 0', fontSize: '0.9rem', color: '#475569' }}>
                         Your requested suite (<strong>{guestPendingRequest.requestedRoomType}</strong>) is currently being approved by Front Desk.<br />
@@ -686,14 +700,14 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
                     </div>
                   ) : (
                     <div>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: 900, color: '#0F172A' }}>
+                      <h4 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>
                         No Active Room Checked In
                       </h4>
                       <p style={{ margin: '0 0 20px 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
                         Reserve your luxury suite to activate your in-room concierge and live folio.
                       </p>
                       <button className="btn-primary-azure" style={{ borderRadius: '30px', padding: '12px 24px' }} onClick={() => setActivePage('BOOKINGS_HISTORY')}>
-                        📅 Reserve Luxury Suite Now
+                        Reserve Luxury Suite Now
                       </button>
                     </div>
                   )}
@@ -735,7 +749,9 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
             {/* Right: Bill Breakdown */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div className="white-card" style={{ borderRadius: '20px', padding: '24px' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', fontWeight: 900 }}>Statement Summary</h3>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>
+                  Statement Summary
+                </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.9rem', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>Subtotal Charges:</span>
@@ -754,15 +770,51 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
               {/* Quick Order Shortcut */}
               <div className="white-card" style={{ borderRadius: '20px', padding: '24px' }}>
-                <h4 style={{ margin: '0 0 14px 0', fontSize: '1rem', fontWeight: 900 }}>Order to Folio</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <button className="btn-outline-pill" style={{ width: '100%', justifyContent: 'space-between', padding: '10px 16px', borderRadius: '12px' }} onClick={() => setActivePage('DINING')}>
-                    <span>🍷 Order In-Room Dining</span>
-                    <span style={{ color: 'var(--primary-azure)', fontWeight: 800 }}>Explore →</span>
+                <h4 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>
+                  Order Services to Folio
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <button 
+                    onClick={() => setActivePage('DINING')} 
+                    style={{ 
+                      width: '100%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '14px 18px', 
+                      background: '#FFFFFF', 
+                      border: '1px solid #E2E8F0', 
+                      borderRadius: '12px', 
+                      cursor: 'pointer', 
+                      transition: 'all 0.2s ease', 
+                      textAlign: 'left' 
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary-azure)'; e.currentTarget.style.background = '#F0F9FF'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#FFFFFF'; }}
+                  >
+                    <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0F172A' }}>Order In-Room Dining</span>
+                    <span style={{ color: 'var(--primary-azure)', fontWeight: 800, fontSize: '0.82rem' }}>Explore &rarr;</span>
                   </button>
-                  <button className="btn-outline-pill" style={{ width: '100%', justifyContent: 'space-between', padding: '10px 16px', borderRadius: '12px' }} onClick={() => setActivePage('SPA')}>
-                    <span>🌿 Book Spa Treatment</span>
-                    <span style={{ color: 'var(--primary-azure)', fontWeight: 800 }}>Book →</span>
+                  <button 
+                    onClick={() => setActivePage('SPA')} 
+                    style={{ 
+                      width: '100%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '14px 18px', 
+                      background: '#FFFFFF', 
+                      border: '1px solid #E2E8F0', 
+                      borderRadius: '12px', 
+                      cursor: 'pointer', 
+                      transition: 'all 0.2s ease', 
+                      textAlign: 'left' 
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary-azure)'; e.currentTarget.style.background = '#F0F9FF'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#FFFFFF'; }}
+                  >
+                    <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0F172A' }}>Book Spa Treatment</span>
+                    <span style={{ color: 'var(--primary-azure)', fontWeight: 800, fontSize: '0.82rem' }}>Book &rarr;</span>
                   </button>
                 </div>
               </div>
@@ -778,7 +830,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
             <div>
               <span className="status-pill blue" style={{ marginBottom: '8px', display: 'inline-block' }}>In-Room Gourmet Dining</span>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
                 Azure Michelin-Inspired Culinary Menu
               </h2>
               <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -803,7 +855,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
                     </span>
                   </div>
                   <div style={{ padding: '20px' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>{dish.name}</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>{dish.name}</h3>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.5' }}>{dish.description}</p>
                   </div>
                 </div>
@@ -824,7 +876,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
         <main style={{ maxWidth: '1440px', margin: '32px auto', padding: '0 36px' }}>
           <div style={{ marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
             <span className="status-pill blue" style={{ marginBottom: '8px', display: 'inline-block' }}>Hydrotherapy & Mineral Spa</span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
               Wellness Rituals & Spa Sanctuaries
             </h2>
             <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -839,11 +891,11 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
                   <div style={{ height: '220px', overflow: 'hidden', position: 'relative' }}>
                     <img src={spa.image} alt={spa.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <span style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(4px)', color: '#38BDF8', fontSize: '0.72rem', fontWeight: 800, padding: '4px 10px', borderRadius: '20px' }}>
-                      ⏱️ {spa.duration}
+                      {spa.duration}
                     </span>
                   </div>
                   <div style={{ padding: '20px' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>{spa.title}</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>{spa.title}</h3>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.5' }}>{spa.description}</p>
                   </div>
                 </div>
@@ -864,7 +916,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
         <main style={{ maxWidth: '1440px', margin: '32px auto', padding: '0 36px' }}>
           <div style={{ marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
             <span className="status-pill blue" style={{ marginBottom: '8px', display: 'inline-block' }}>24/7 Butler & Housekeeping Concierge</span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
               In-Room Housekeeping Amenities & Service Requests
             </h2>
             <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -876,14 +928,13 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
             {housekeepingAmenities.map((item, idx) => (
               <div key={idx} className="white-card" style={{ borderRadius: '18px', padding: '24px', cursor: 'pointer', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }} onClick={() => handleQuickHousekeepingDispatch(item.title)}>
                 <div>
-                  <div style={{ fontSize: '2rem', marginBottom: '10px' }}>{item.icon}</div>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--primary-azure)', background: '#F0F9FF', padding: '2px 8px', borderRadius: '12px' }}>{item.category}</span>
-                  <h3 style={{ margin: '8px 0 4px 0', fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>{item.title}</h3>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--primary-azure)', background: '#F0F9FF', padding: '2px 8px', borderRadius: '12px', display: 'inline-block', marginBottom: '8px' }}>{item.category}</span>
+                  <h3 style={{ margin: '4px 0 4px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>{item.title}</h3>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.4' }}>{item.desc}</p>
                 </div>
                 <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed #E2E8F0', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button className="btn-outline-pill" style={{ borderRadius: '20px', fontSize: '0.75rem', padding: '4px 12px', color: 'var(--primary-azure)' }}>
-                    ⚡ Dispatch to Suite →
+                  <button className="btn-outline-pill" style={{ borderRadius: '20px', fontSize: '0.75rem', padding: '6px 14px', color: 'var(--primary-azure)' }}>
+                    Dispatch to Suite &rarr;
                   </button>
                 </div>
               </div>
@@ -892,20 +943,24 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }}>
             <div className="white-card" style={{ borderRadius: '20px', padding: '28px' }}>
-              <h3 style={{ margin: '0 0 6px 0', fontSize: '1.2rem', fontWeight: 900 }}>✍️ Write Custom Butler Request</h3>
+              <h3 style={{ margin: '0 0 6px 0', fontSize: '1.3rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>
+                Write Custom Butler Request
+              </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '18px' }}>
                 Need something specific? Send an instant ticket directly to Front Desk & Housekeeping.
               </p>
               <form onSubmit={handleCustomHousekeepingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <textarea required rows={4} className="form-input-custom" style={{ borderRadius: '12px', padding: '14px' }} placeholder="e.g. Please send extra champagne flutes and ice bucket to Suite 101." value={customRequestText} onChange={e => setCustomRequestText(e.target.value)} />
                 <button className="btn-primary-azure" style={{ borderRadius: '30px', padding: '12px', justifyContent: 'center' }}>
-                  🚀 Transmit Request to Staff
+                  Transmit Request to Staff
                 </button>
               </form>
             </div>
 
             <div className="white-card" style={{ borderRadius: '20px', padding: '28px' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', fontWeight: 900 }}>📜 Transmitted Housekeeping Logs</h3>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.3rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>
+                Transmitted Housekeeping Logs
+              </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '280px', overflowY: 'auto' }}>
                 {housekeepingRequests.map(req => (
                   <div key={req.id} style={{ padding: '12px 16px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -927,15 +982,15 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
         <main style={{ maxWidth: '1440px', margin: '32px auto', padding: '0 36px' }}>
           <div style={{ marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
             <span className="status-pill blue" style={{ marginBottom: '8px', display: 'inline-block' }}>Stay History & Direct Reservation</span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
               My Reservations & Past Stay Invoices
             </h2>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }}>
             <div className="white-card" style={{ borderRadius: '20px', padding: '28px' }}>
-              <h3 style={{ color: '#0F172A', marginBottom: '6px', fontSize: '1.2rem', fontWeight: 900 }}>
-                📅 Reserve New Luxury Suite
+              <h3 style={{ color: '#0F172A', marginBottom: '6px', fontSize: '1.3rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif" }}>
+                Reserve New Luxury Suite
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '18px' }}>
                 Profile Bound: <strong>{guestDisplayName} ({userEmail})</strong>
@@ -943,7 +998,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
               {requestSuccess && (
                 <div style={{ padding: '14px', marginBottom: '16px', background: 'var(--status-available-bg)', border: '1px solid var(--status-available-border)', color: 'var(--primary-azure)', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 800 }}>
-                  ✨ Booking Request Transmitted to Front Desk!
+                  Booking Request Transmitted to Front Desk!
                 </div>
               )}
 
@@ -991,7 +1046,9 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
             </div>
 
             <div className="white-card" style={{ borderRadius: '20px', padding: '28px' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', fontWeight: 900 }}>📜 Past Stay Receipts & Invoices</h3>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.3rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>
+                Past Stay Receipts & Invoices
+              </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {guestPastInvoices.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
@@ -1026,7 +1083,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
         <main style={{ maxWidth: '1440px', margin: '32px auto', padding: '0 36px' }}>
           <div style={{ marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
             <span className="status-pill blue" style={{ marginBottom: '8px', display: 'inline-block' }}>Verified Guest Feedback</span>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
               Guest Reviews & Experience Ratings
             </h2>
             <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -1036,7 +1093,9 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '28px' }}>
             <div className="white-card" style={{ borderRadius: '20px', padding: '28px' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', fontWeight: 900 }}>⭐ Submit Guest Review</h3>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.3rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>
+                Submit Guest Review
+              </h3>
               {reviewSubmittedMsg && (
                 <div style={{ padding: '12px', marginBottom: '14px', background: 'var(--status-available-bg)', border: '1px solid var(--status-available-border)', color: 'var(--primary-azure)', borderRadius: '8px', fontWeight: 800, fontSize: '0.85rem' }}>
                   {reviewSubmittedMsg}

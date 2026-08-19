@@ -80,16 +80,23 @@ export const AuthProvider = ({ children }) => {
 
     const cleanId = identifier.trim();
 
+    // Attempt backend microservice auth with fast silent fallback
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 400);
+
       const response = await fetch('http://localhost:8000/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: cleanId, password, targetRole })
-      });
+        body: JSON.stringify({ identifier: cleanId, password, targetRole }),
+        signal: controller.signal
+      }).catch(() => null);
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
+      clearTimeout(timeoutId);
+
+      if (response && response.ok) {
+        const data = await response.json().catch(() => null);
+        if (data && data.success) {
           const account = data.userAccount;
           const session = {
             isAuthenticated: true,
@@ -101,15 +108,10 @@ export const AuthProvider = ({ children }) => {
           };
           saveAuthSession(session);
           return { success: true, role: account.role || targetRole || 'GUEST', account };
-        } else {
-          return { success: false, message: data.message };
         }
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        return { success: false, message: errData.message || 'Authentication failed for the selected role.' };
       }
     } catch (e) {
-      console.warn("Backend auth microservice offline, using local fallback resolver:", e);
+      // Silent fallback to local auth store
     }
 
     // Fallback Local Role Verification

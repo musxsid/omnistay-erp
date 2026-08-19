@@ -8,27 +8,26 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   const getNavItems = () => {
     if (userRole === 'STAFF_FRONTDESK') {
       return [
-        { id: 'dashboard', label: 'Works Overview' },
-        { id: 'rooms', label: 'Front Desk & Matrix' },
+        { id: 'rooms', label: 'Front Desk Room Matrix' },
         { id: 'bookings', label: 'Bookings Log' }
       ];
     }
     if (userRole === 'STAFF_HOUSEKEEPING') {
       return [
-        { id: 'dashboard', label: 'Works Overview' },
-        { id: 'rooms', label: 'Cleaning Matrix & Housekeeping' }
+        { id: 'housekeeping', label: 'Housekeeping Realm' }
       ];
     }
     if (userRole === 'STAFF_RESTAURANT') {
       return [
-        { id: 'pos', label: 'Restaurant POS & Folio' }
+        { id: 'pos', label: 'Restaurant POS & Culinary' }
       ];
     }
-    // ADMIN
+    // ADMIN (Has access to executive overview and all domain tabs separately)
     return [
-      { id: 'dashboard', label: 'Works Overview' },
-      { id: 'rooms', label: 'Room Matrix' },
-      { id: 'pos', label: 'Restaurant POS' },
+      { id: 'dashboard', label: 'Executive Works Overview' },
+      { id: 'rooms', label: 'Front Desk Room Matrix' },
+      { id: 'housekeeping', label: 'Housekeeping Realm' },
+      { id: 'pos', label: 'Restaurant POS & Culinary' },
       { id: 'bookings', label: 'Bookings Log' }
     ];
   };

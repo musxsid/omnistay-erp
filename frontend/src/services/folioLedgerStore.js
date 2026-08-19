@@ -33,6 +33,11 @@ class FolioLedgerStore {
       ],
       activeRooms: [], // Currently occupied rooms e.g. { roomNumber: 101, guestName, folioId, status: 'OCCUPIED' }
       activeFolios: {}, // "101": [ { id, date, description, amount, departmentCode } ]
+      roomStatuses: {
+        "103": "DIRTY",
+        "106": "DIRTY",
+        "205": "DIRTY"
+      },
       pastStayHistory: [], // Master historical archive of completed guest stays & settled bills
       posHistory: {
         F_AND_B: [],
@@ -108,6 +113,11 @@ class FolioLedgerStore {
     if (!booking) return null;
 
     const roomNum = String(assignedRoomNumber);
+    const existingOccupant = this.state.activeRooms.find(r => String(r.roomNumber) === roomNum);
+    if (existingOccupant) {
+      throw new Error(`Suite ${roomNum} is NOT available! It is currently OCCUPIED by ${existingOccupant.guestName} until ${existingOccupant.checkOut || 'check-out'}. Please choose another room.`);
+    }
+
     const folioId = `FOL-${roomNum}-${Date.now().toString().slice(-4)}`;
 
     // Remove from pending
@@ -121,12 +131,12 @@ class FolioLedgerStore {
       guestPhone: booking.guestPhone,
       folioId,
       status: 'OCCUPIED',
-      checkIn: booking.checkIn || new Date().toISOString(),
-      checkOut: booking.checkOut || new Date(Date.now() + 86400000 * 2).toISOString(),
+      checkIn: booking.checkIn || new Date().toISOString().split('T')[0],
+      checkOut: booking.checkOut || new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
       nightlyRate: booking.totalAmount || 450.00
     };
 
-    this.state.activeRooms = [...this.state.activeRooms.filter(r => String(r.roomNumber) !== roomNum), occupiedRoom];
+    this.state.activeRooms.push(occupiedRoom);
 
     // Initialize clean folio ledger for this room with initial Room Charge
     this.state.activeFolios[roomNum] = [
@@ -142,6 +152,56 @@ class FolioLedgerStore {
 
     this.save();
     return occupiedRoom;
+  }
+
+  // --- Direct Walk-in Check In (Front Desk Entry - Bypasses Pending Approval) ---
+  directCheckIn(guestData) {
+    const roomNum = String(guestData.roomNumber);
+    const existingOccupant = this.state.activeRooms.find(r => String(r.roomNumber) === roomNum);
+    if (existingOccupant) {
+      throw new Error(`Suite ${roomNum} is NOT available! It is currently OCCUPIED by ${existingOccupant.guestName} until ${existingOccupant.checkOut || 'check-out'}. Please choose another room.`);
+    }
+
+    const folioId = `FOL-${roomNum}-${Date.now().toString().slice(-4)}`;
+    const occupiedRoom = {
+      roomNumber: roomNum,
+      guestName: guestData.guestName,
+      guestEmail: guestData.guestEmail || 'walkin@omnistay.com',
+      guestPhone: guestData.guestPhone || '+1 (555) 000-0000',
+      folioId,
+      status: 'OCCUPIED',
+      checkIn: guestData.checkIn || new Date().toISOString().split('T')[0],
+      checkOut: guestData.checkOut || new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+      nightlyRate: Number(guestData.nightlyRate || guestData.totalAmount || 450.00)
+    };
+
+    this.state.activeRooms.push(occupiedRoom);
+
+    this.state.activeFolios[roomNum] = [
+      {
+        id: `tx-${roomNum}-lodging`,
+        date: new Date().toISOString(),
+        description: `Room ${roomNum} Direct Lodging Stay Rate (${guestData.roomType || 'Deluxe Suite'})`,
+        amount: Number(guestData.nightlyRate || 450.00),
+        departmentCode: 'ROOM',
+        guestName: guestData.guestName
+      }
+    ];
+
+    this.save();
+    return occupiedRoom;
+  }
+
+  // --- Step 2b: Decline / Reject Booking Request (Front Desk) ---
+  declineBooking(bookingId) {
+    const bookingIndex = this.state.pendingBookings.findIndex(b => b.id === bookingId);
+    if (bookingIndex === -1) return null;
+
+    const declined = this.state.pendingBookings[bookingIndex];
+    this.state.pendingBookings = this.state.pendingBookings.filter(b => b.id !== bookingId);
+
+    this.save();
+    return declined;
   }
 
   // --- Step 3: Add POS Transaction ---
@@ -210,8 +270,21 @@ class FolioLedgerStore {
     // Clear active folio for this room (POS screens drop this room number!)
     delete this.state.activeFolios[key];
 
+    // Mark suite as DIRTY upon checkout
+    if (!this.state.roomStatuses) this.state.roomStatuses = {};
+    this.state.roomStatuses[key] = 'DIRTY';
+
     this.save();
     return settledStayRecord;
+  }
+
+  // --- Step 5: Update Room Cleaning Status across all Portals ---
+  updateRoomStatus(roomNumber, status) {
+    const key = String(roomNumber);
+    if (!this.state.roomStatuses) this.state.roomStatuses = {};
+    this.state.roomStatuses[key] = status;
+    this.save();
+    return status;
   }
 }
 
@@ -231,12 +304,16 @@ export const useFolioLedgers = () => {
     pendingBookings: state.pendingBookings,
     activeRooms: state.activeRooms,
     activeFolios: state.activeFolios,
+    roomStatuses: state.roomStatuses || {},
     pastStayHistory: state.pastStayHistory,
     posHistory: state.posHistory,
 
     addBookingRequest: (booking) => folioLedgerStore.addBookingRequest(booking),
     approveBooking: (bookingId, roomNumber) => folioLedgerStore.approveBooking(bookingId, roomNumber),
+    directCheckIn: (guestData) => folioLedgerStore.directCheckIn(guestData),
+    declineBooking: (bookingId) => folioLedgerStore.declineBooking(bookingId),
     addTransaction: (roomNumber, txn) => folioLedgerStore.addTransaction(roomNumber, txn),
-    checkoutRoom: (roomNumber) => folioLedgerStore.checkoutRoom(roomNumber)
+    checkoutRoom: (roomNumber) => folioLedgerStore.checkoutRoom(roomNumber),
+    updateRoomStatus: (roomNumber, status) => folioLedgerStore.updateRoomStatus(roomNumber, status)
   };
 };

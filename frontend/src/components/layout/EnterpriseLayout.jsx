@@ -24,9 +24,11 @@ const EnterpriseLayout = () => {
     if (userRole === 'STAFF_RESTAURANT') {
       setActiveTab('pos');
     } else if (userRole === 'STAFF_HOUSEKEEPING') {
+      setActiveTab('housekeeping');
+    } else if (userRole === 'STAFF_FRONTDESK') {
       setActiveTab('rooms');
     } else if (userRole === 'ADMIN') {
-      setActiveTab('admin');
+      setActiveTab('dashboard');
     } else {
       setActiveTab('dashboard');
     }
@@ -88,21 +90,12 @@ const EnterpriseLayout = () => {
         {/* Main Content View Container */}
         <div className="main-scroll">
           {activeTab === 'dashboard' && <DashboardView />}
-          {activeTab === 'rooms' && <RoomMatrix />}
-          {activeTab === 'bookings' && <BookingsDashboard />}
+          {activeTab === 'rooms' && <RoomMatrix forcedMode="FRONT_DESK" globalSearch={searchTerm} />}
+          {activeTab === 'housekeeping' && <RoomMatrix forcedMode="HOUSEKEEPING" globalSearch={searchTerm} />}
+          {activeTab === 'bookings' && <BookingsDashboard globalSearch={searchTerm} />}
           {activeTab === 'admin' && <AdminDashboard />}
           {activeTab === 'ai' && <AiConcierge />}
-          {activeTab === 'pos' && (
-            <div>
-              <div className="page-header-row" style={{ marginBottom: '24px' }}>
-                <div className="greeting-text">
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-main)' }}>Restaurant POS & Services</h2>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>Direct amenity order processing & guest folio posting.</p>
-                </div>
-              </div>
-              <PosScreen />
-            </div>
-          )}
+          {activeTab === 'pos' && <PosScreen />}
         </div>
       </main>
 
