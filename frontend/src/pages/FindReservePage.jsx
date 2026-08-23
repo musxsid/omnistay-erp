@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BrandLogo from '../components/BrandLogo';
 import DatePicker from '../components/DatePicker';
 import { useHotelData } from '../services/hotelDataStore';
+import { useAuth } from '../context/AuthContext';
 
 import SuiteDetailsModal from '../components/SuiteDetailsModal';
 
 const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
   const { suites } = useHotelData();
+  const { isAuthenticated, currentUserAccount, logout } = useAuth();
 
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [searchLocation, setSearchLocation] = useState('Vargarammoota Grand Resort');
@@ -15,12 +17,27 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
   const [previewSuite, setPreviewSuite] = useState(null);
   const [selectedSuite, setSelectedSuite] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [contactInfo, setContactInfo] = useState('');
+
+  useEffect(() => {
+    if (currentUserAccount) {
+      setGuestName(currentUserAccount.fullName || '');
+      setContactInfo(currentUserAccount.email || currentUserAccount.phone || '');
+    }
+  }, [currentUserAccount]);
 
   const filteredItems = categoryFilter === 'ALL' 
     ? suites 
     : suites.filter(item => item.category === categoryFilter);
 
   const handleBookNow = (item) => {
+    if (!isAuthenticated) {
+      if (onOpenAuth) {
+        onOpenAuth('GUEST');
+      }
+      return;
+    }
     setPreviewSuite(null);
     setSelectedSuite(item);
   };
@@ -40,13 +57,24 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
       <nav className="omnistay-navbar">
         <BrandLogo subtitle="CATALOG" onClick={onBackToHome} />
 
-        <div style={{ display: 'flex', gap: '14px' }}>
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
           <button className="btn-outline-pill" onClick={onBackToHome}>
             ← Back to Home
           </button>
-          <button className="btn-primary-azure" onClick={onOpenAuth}>
-            Sign In / Register
-          </button>
+          {isAuthenticated ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                👤 {currentUserAccount?.fullName || 'Valued Guest'}
+              </span>
+              <button className="btn-outline-pill" onClick={logout}>
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button className="btn-primary-azure" onClick={() => onOpenAuth && onOpenAuth('GUEST')}>
+              Sign In / Register
+            </button>
+          )}
         </div>
       </nav>
 
@@ -189,11 +217,25 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
               <form onSubmit={handleConfirmReservation} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textTransform: 'uppercase' }}>Guest Full Name</label>
-                  <input type="text" required className="form-input-custom" placeholder="Siddharth Kumar" />
+                  <input 
+                    type="text" 
+                    required 
+                    className="form-input-custom" 
+                    placeholder="Siddharth Kumar"
+                    value={guestName}
+                    onChange={e => setGuestName(e.target.value)}
+                  />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px', textTransform: 'uppercase' }}>Contact Email or Phone</label>
-                  <input type="text" required className="form-input-custom" placeholder="siddharth@gmail.com" />
+                  <input 
+                    type="text" 
+                    required 
+                    className="form-input-custom" 
+                    placeholder="siddharth@gmail.com"
+                    value={contactInfo}
+                    onChange={e => setContactInfo(e.target.value)}
+                  />
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <DatePicker 

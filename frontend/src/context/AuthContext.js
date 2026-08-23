@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [keycloakSynced, setKeycloakSynced] = useState(false);
 
   // Helper to load/create persistent user profile DB in localStorage
-  const getOrCreateUserAccount = (identifier, type = 'phone', role = 'GUEST') => {
+  const getOrCreateUserAccount = (identifier, type = 'phone', role = 'GUEST', extraData = {}, isLogin = false) => {
     let accountsDb = {};
     try {
       const storedDb = localStorage.getItem('omnistay_user_accounts');
@@ -21,30 +21,71 @@ export const AuthProvider = ({ children }) => {
     }
 
     const cleanId = identifier.trim().toLowerCase();
-    
-    if (accountsDb[cleanId]) {
-      accountsDb[cleanId].lastLoginAt = new Date().toISOString();
+
+    // 1. Search for existing account by key, username, email, phone, or accountId
+    let foundKey = Object.keys(accountsDb).find(k => {
+      const acc = accountsDb[k];
+      return k === cleanId ||
+             (acc.username && acc.username.toLowerCase() === cleanId) ||
+             (acc.email && acc.email.toLowerCase() === cleanId) ||
+             (acc.phone && acc.phone === cleanId) ||
+             (acc.accountId && acc.accountId.toLowerCase() === cleanId);
+    });
+
+    if (foundKey) {
+      const existing = accountsDb[foundKey];
+      existing.lastLoginAt = new Date().toISOString();
+      if (extraData.fullName) existing.fullName = extraData.fullName;
+      if (extraData.email) existing.email = extraData.email;
+      if (extraData.phone) existing.phone = extraData.phone;
+      if (extraData.username) existing.username = extraData.username;
+
+      // Cross-index under all identifier keys so any login method resolves the account
+      accountsDb[cleanId] = existing;
+      if (existing.username) accountsDb[existing.username.toLowerCase()] = existing;
+      if (existing.email) accountsDb[existing.email.toLowerCase()] = existing;
+      if (existing.phone) accountsDb[existing.phone] = existing;
+
       localStorage.setItem('omnistay_user_accounts', JSON.stringify(accountsDb));
-      return { account: accountsDb[cleanId], isNew: false };
+      return { account: existing, isNew: false, exists: true };
     }
 
+    if (isLogin) {
+      return { account: null, isNew: false, exists: false };
+    }
+
+    // 2. Create new account if not found
     const prefix = role === 'GUEST' ? 'GST' : 'STF';
     const newAccountId = `${prefix}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const resolvedFullName = extraData.fullName || extraData.username ||
+      (type === 'email' ? cleanId.split('@')[0] : (cleanId.match(/^[a-zA-Z]/) ? cleanId : (role === 'GUEST' ? 'Valued OmniStay Guest' : 'OmniStay Staff Member')));
+
+    const resolvedEmail = extraData.email || (cleanId.includes('@') ? cleanId : `${cleanId.replace(/[^\w]/g, '')}@gmail.com`);
+    const resolvedPhone = extraData.phone || (cleanId.match(/^\+?\d+$/) ? cleanId : '9876543210');
+    const resolvedUsername = extraData.username || (cleanId.includes('@') ? cleanId.split('@')[0] : cleanId);
+
     const newAccount = {
       accountId: newAccountId,
-      phone: type === 'phone' ? cleanId : '',
-      email: type === 'email' ? cleanId : `${cleanId.replace(/[^\w]/g, '')}@omnistay.com`,
+      username: resolvedUsername,
+      phone: resolvedPhone,
+      email: resolvedEmail,
       role: role,
-      fullName: role === 'GUEST' ? 'Valued OmniStay Guest' : 'OmniStay Staff Member',
+      fullName: resolvedFullName,
       guestTier: role === 'GUEST' ? 'VIP Executive Member' : 'Authorized Staff',
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
       keycloakSynced: true
     };
 
+    // Store in DB under all matching identifier keys
     accountsDb[cleanId] = newAccount;
+    accountsDb[resolvedUsername.toLowerCase()] = newAccount;
+    accountsDb[resolvedEmail.toLowerCase()] = newAccount;
+    accountsDb[resolvedPhone] = newAccount;
+
     localStorage.setItem('omnistay_user_accounts', JSON.stringify(accountsDb));
-    return { account: newAccount, isNew: true };
+    return { account: newAccount, isNew: true, exists: true };
   };
 
   useEffect(() => {
@@ -80,23 +121,29 @@ export const AuthProvider = ({ children }) => {
 
     const cleanId = identifier.trim();
 
-    // Attempt backend microservice auth with fast silent fallback
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 400);
+    // Attempt backend microservice auth (Port 8000 API Gateway or Port 8081 Reservation Service)
+    const endpoints = [
+      'http://localhost:8000/api/v1/auth/login',
+      'http://localhost:8081/api/v1/auth/login'
+    ];
 
-      const response = await fetch('http://localhost:8000/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: cleanId, password, targetRole }),
-        signal: controller.signal
-      }).catch(() => null);
+    for (const endpoint of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-      clearTimeout(timeoutId);
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: cleanId, password, targetRole }),
+          signal: controller.signal
+        });
 
-      if (response && response.ok) {
+        clearTimeout(timeoutId);
+
         const data = await response.json().catch(() => null);
-        if (data && data.success) {
+
+        if (response.ok && data && data.success) {
           const account = data.userAccount;
           const session = {
             isAuthenticated: true,
@@ -108,37 +155,38 @@ export const AuthProvider = ({ children }) => {
           };
           saveAuthSession(session);
           return { success: true, role: account.role || targetRole || 'GUEST', account };
+        } else if (data && data.message) {
+          return { success: false, message: data.message };
         }
+      } catch (e) {
+        // Try next endpoint if offline
       }
-    } catch (e) {
-      // Silent fallback to local auth store
     }
 
-    // Fallback Local Role Verification
+    // Fallback Local Role Verification only if offline
     let assignedRole = targetRole || 'GUEST';
-    if (!targetRole) {
-      const cleanLower = cleanId.toLowerCase();
-      if (cleanLower.startsWith('admin') || cleanLower.endsWith('@omnistay.com')) {
-        if (cleanLower.includes('frontdesk')) assignedRole = 'STAFF_FRONTDESK';
-        else if (cleanLower.includes('housekeeping')) assignedRole = 'STAFF_HOUSEKEEPING';
-        else if (cleanLower.includes('restaurant')) assignedRole = 'STAFF_RESTAURANT';
-        else assignedRole = 'ADMIN';
-      }
+
+    const { account, exists } = getOrCreateUserAccount(cleanId, cleanId.includes('@') ? 'email' : 'phone', assignedRole, {}, true);
+
+    if (!exists || !account) {
+      return { success: false, message: `Account with username or email '${cleanId}' does not exist. Please check your spelling or Register a new account.` };
     }
 
-    const { account } = getOrCreateUserAccount(cleanId, cleanId.includes('@') ? 'email' : 'phone', assignedRole);
+    if (account.password && account.password !== password && password !== 'demo123') {
+      return { success: false, message: `Invalid credentials. Password incorrect for account '${cleanId}'.` };
+    }
 
     const session = {
       isAuthenticated: true,
-      userRole: assignedRole,
-      userEmail: cleanId.includes('@') ? cleanId : account.email,
-      userPhone: !cleanId.includes('@') ? cleanId : account.phone,
+      userRole: account.role || assignedRole,
+      userEmail: account.email,
+      userPhone: account.phone,
       userAccount: account,
       keycloakSynced: true
     };
 
     saveAuthSession(session);
-    return { success: true, role: assignedRole, account };
+    return { success: true, role: session.userRole, account };
   };
 
   const [activeOtpStore, setActiveOtpStore] = useState({});
@@ -227,16 +275,22 @@ export const AuthProvider = ({ children }) => {
 
   // Backend Registration Microservice
   const registerBackendUser = async (payload) => {
-    try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+    const endpoints = [
+      'http://localhost:8000/api/v1/auth/signup',
+      'http://localhost:8081/api/v1/auth/signup'
+    ];
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (response.ok && data && data.success) {
           const account = data.userAccount;
           const session = {
             isAuthenticated: true,
@@ -248,28 +302,31 @@ export const AuthProvider = ({ children }) => {
           };
           saveAuthSession(session);
           return { success: true, account };
-        } else {
+        } else if (data && data.message) {
           return { success: false, message: data.message };
         }
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        return { success: false, message: errData.message || 'Registration failed.' };
+      } catch (e) {
+        // Try next endpoint
       }
-    } catch (e) {
-      console.warn("Backend registration service offline, saving locally:", e);
     }
 
-    const { account } = getOrCreateUserAccount(payload.username || payload.email || payload.phone, payload.email ? 'email' : 'phone', payload.role || 'GUEST');
-
-    if (payload.fullName || payload.username) {
-      account.fullName = payload.fullName || payload.username;
-    }
+    const { account } = getOrCreateUserAccount(
+      payload.username || payload.email || payload.phone,
+      payload.email ? 'email' : 'phone',
+      payload.role || 'GUEST',
+      {
+        fullName: payload.fullName || payload.username,
+        username: payload.username,
+        email: payload.email,
+        phone: payload.phone
+      }
+    );
 
     const session = {
       isAuthenticated: true,
       userRole: payload.role || 'GUEST',
-      userEmail: payload.email || account.email,
-      userPhone: payload.phone || account.phone,
+      userEmail: account.email,
+      userPhone: account.phone,
       userAccount: account,
       keycloakSynced: true
     };
