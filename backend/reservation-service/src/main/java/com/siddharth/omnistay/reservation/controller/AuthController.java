@@ -21,7 +21,7 @@ public class AuthController {
         this.userAccountRepository = userAccountRepository;
     }
 
-    // --- Signup: Register User Account in PostgreSQL DB ---
+    // --- Signup: Register User Account ---
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody Map<String, Object> payload) {
         String username = (String) payload.getOrDefault("username", "");
@@ -32,7 +32,7 @@ public class AuthController {
         Boolean termsAccepted = (Boolean) payload.getOrDefault("termsAccepted", false);
 
         if (!termsAccepted) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "You must accept the Terms of Service & Privacy Policy to register."));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Terms of Service must be accepted to register."));
         }
 
         String cleanUsername = username.trim();
@@ -40,29 +40,29 @@ public class AuthController {
         String cleanPhone = phone.trim();
 
         if (cleanUsername.isEmpty() && cleanEmail.isEmpty() && cleanPhone.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Please provide a valid Username, Email, or Mobile Phone Number."));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Please enter a valid Username, Email, or Phone."));
         }
 
-        // Check if username, email, or phone already exists in PostgreSQL
+        // Check if username, email, or phone already exists
         if (!cleanUsername.isEmpty() && userAccountRepository.findByUsernameIgnoreCase(cleanUsername).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Username '" + cleanUsername + "' is already registered in our system."));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Username is already registered."));
         }
         if (!cleanEmail.isEmpty() && userAccountRepository.findByEmailIgnoreCase(cleanEmail).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Email '" + cleanEmail + "' is already registered in our system."));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Email address is already registered."));
         }
         if (!cleanPhone.isEmpty() && userAccountRepository.findByPhone(cleanPhone).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mobile number '" + cleanPhone + "' is already registered in our system."));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mobile number is already registered."));
         }
 
-        String prefix = (requestedRole.startsWith("STAFF") || requestedRole.equals("ADMIN")) ? "STF-" : "GST-";
-        String accountId = prefix + (100000 + new Random().nextInt(900000));
-        String fullName = !cleanUsername.isEmpty() ? cleanUsername : (cleanEmail.contains("@") ? cleanEmail.split("@")[0] : "OmniStay Guest");
+        String providedFullName = (String) payload.getOrDefault("fullName", "");
+        String accountId = UUID.randomUUID().toString();
+        String fullName = !providedFullName.trim().isEmpty() ? providedFullName.trim() : (!cleanUsername.isEmpty() ? cleanUsername : (cleanEmail.contains("@") ? cleanEmail.split("@")[0] : "OmniStay Guest"));
 
         UserAccountEntity newAccount = UserAccountEntity.builder()
                 .accountId(accountId)
                 .username(!cleanUsername.isEmpty() ? cleanUsername : cleanEmail.split("@")[0])
                 .email(!cleanEmail.isEmpty() ? cleanEmail : cleanUsername.toLowerCase() + "@omnistay.com")
-                .phone(!cleanPhone.isEmpty() ? cleanPhone : "9876543210")
+                .phone(!cleanPhone.isEmpty() ? cleanPhone : "")
                 .password(password.isEmpty() ? "user123" : password)
                 .role(requestedRole)
                 .fullName(fullName)
@@ -70,17 +70,70 @@ public class AuthController {
                 .createdAt(LocalDateTime.now().toString())
                 .build();
 
-        // Save directly into PostgreSQL database
         UserAccountEntity saved = userAccountRepository.save(newAccount);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Account registered successfully in PostgreSQL DB!",
+                "message", "Account registered successfully.",
                 "userAccount", saved
         ));
     }
 
-    // --- Login: Authenticate against PostgreSQL DB ---
+    // --- Get User Account by UUID, Username, Email, or Phone ---
+    @GetMapping("/user/{identifier}")
+    public ResponseEntity<?> getUserAccount(@PathVariable String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Identifier required"));
+        }
+        String cleanId = identifier.trim();
+        Optional<UserAccountEntity> accountOpt = userAccountRepository.findById(cleanId)
+                .or(() -> userAccountRepository.findByUsernameIgnoreCase(cleanId))
+                .or(() -> userAccountRepository.findByEmailIgnoreCase(cleanId))
+                .or(() -> userAccountRepository.findByPhone(cleanId));
+
+        if (accountOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "User account not found."));
+        }
+        return ResponseEntity.ok(Map.of("success", true, "userAccount", accountOpt.get()));
+    }
+
+    // --- Update User Profile ---
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateUserProfile(@RequestBody Map<String, Object> payload) {
+        String accountId = (String) payload.getOrDefault("accountId", "");
+        String username = (String) payload.getOrDefault("username", "");
+
+        Optional<UserAccountEntity> accountOpt = Optional.empty();
+        if (!accountId.trim().isEmpty()) {
+            accountOpt = userAccountRepository.findById(accountId.trim());
+        }
+        if (accountOpt.isEmpty() && !username.trim().isEmpty()) {
+            accountOpt = userAccountRepository.findByUsernameIgnoreCase(username.trim());
+        }
+
+        if (accountOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("success", false, "message", "Account not found for update."));
+        }
+
+        UserAccountEntity account = accountOpt.get();
+        if (payload.containsKey("fullName") && payload.get("fullName") != null) {
+            String fn = ((String) payload.get("fullName")).trim();
+            if (!fn.isEmpty()) account.setFullName(fn);
+        }
+        if (payload.containsKey("email") && payload.get("email") != null) {
+            String em = ((String) payload.get("email")).trim();
+            if (!em.isEmpty()) account.setEmail(em);
+        }
+        if (payload.containsKey("phone") && payload.get("phone") != null) {
+            String ph = ((String) payload.get("phone")).trim();
+            account.setPhone(ph);
+        }
+
+        UserAccountEntity updated = userAccountRepository.save(account);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Profile updated successfully.", "userAccount", updated));
+    }
+
+    // --- Login: Authenticate User ---
     @PostMapping("/login")
     public ResponseEntity<?> loginWithCredentials(@RequestBody Map<String, Object> payload) {
         String identifier = (String) payload.getOrDefault("identifier", "");
@@ -88,45 +141,41 @@ public class AuthController {
         String targetRole = (String) payload.getOrDefault("targetRole", "");
 
         if (identifier.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Please enter your Username, Email, or Mobile Number."));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Please enter your Username, Email, or Phone."));
         }
 
         String cleanId = identifier.trim();
 
-        // Search PostgreSQL for account by username, email, or phone
         Optional<UserAccountEntity> accountOpt = userAccountRepository.findByUsernameIgnoreCase(cleanId)
                 .or(() -> userAccountRepository.findByEmailIgnoreCase(cleanId))
                 .or(() -> userAccountRepository.findByPhone(cleanId));
 
-        // 1. Account Does Not Exist Error
         if (accountOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "Account with username or email '" + cleanId + "' does not exist in our database. Please check your spelling or register a new account."
+                    "message", "User account not found. Please check spelling or register."
             ));
         }
 
         UserAccountEntity account = accountOpt.get();
 
-        // 2. Role Lock Error
         if (!targetRole.isEmpty() && !targetRole.equalsIgnoreCase(account.getRole())) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "❌ Access Denied: Account '" + cleanId + "' is registered as [" + account.getRole() + "] and cannot sign in under the [" + targetRole + "] portal."
+                    "message", "Access denied for selected portal role."
             ));
         }
 
-        // 3. Password Mismatch Error
         if (!account.getPassword().equals(password) && !password.equals("demo123")) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "Invalid credentials. Password incorrect for account '" + cleanId + "'."
+                    "message", "Incorrect password. Please try again."
             ));
         }
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Authenticated successfully against PostgreSQL!",
+                "message", "Signed in successfully.",
                 "userAccount", account,
                 "role", account.getRole()
         ));
@@ -137,15 +186,13 @@ public class AuthController {
     public ResponseEntity<?> sendBackendMobileOtp(@RequestBody Map<String, String> payload) {
         String phone = payload.getOrDefault("phone", "").trim();
         if (phone.length() < 7) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Please provide a valid mobile number with country code."));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Please enter a valid mobile number."));
         }
 
         String generatedOtp = String.valueOf(100000 + new Random().nextInt(900000));
         activeOtpChallenges.put(phone, generatedOtp);
 
-        System.out.println("[BACKEND SMS DISPATCH] Generated 6-digit OTP for " + phone + ": " + generatedOtp);
-
-        return ResponseEntity.ok(Map.of("success", true, "otp", generatedOtp, "realSmsSent", false, "message", "OTP generated by Backend Microservice."));
+        return ResponseEntity.ok(Map.of("success", true, "otp", generatedOtp, "realSmsSent", false, "message", "OTP sent successfully."));
     }
 
     // --- Verify Mobile OTP ---
@@ -170,8 +217,7 @@ public class AuthController {
 
         if (isNew) {
             String roleToAssign = targetRole.isEmpty() ? "GUEST" : targetRole;
-            String prefix = (roleToAssign.startsWith("STAFF") || roleToAssign.equals("ADMIN")) ? "STF-" : "GST-";
-            String accountId = prefix + (100000 + new Random().nextInt(900000));
+            String accountId = UUID.randomUUID().toString();
             String cleanPhoneNum = phone.replaceAll("[^0-9]", "");
             account = UserAccountEntity.builder()
                     .accountId(accountId)
@@ -188,7 +234,7 @@ public class AuthController {
         } else {
             account = accountOpt.get();
             if (!targetRole.isEmpty() && !targetRole.equalsIgnoreCase(account.getRole())) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "❌ Access Denied: This account is registered as [" + account.getRole() + "] and cannot sign in under the [" + targetRole + "] portal."));
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Access denied for selected portal role."));
             }
         }
 

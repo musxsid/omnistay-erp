@@ -64,7 +64,7 @@ const FindReservePage = ({ onOpenAuth, onBackToHome }) => {
           {isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                👤 {currentUserAccount?.fullName || 'Valued Guest'}
+                👤 {(!currentUserAccount?.fullName || ['Valued OmniStay Guest', 'Valued Guest', 'OmniStay Guest'].includes(currentUserAccount.fullName)) ? (currentUserAccount?.username || 'Valued Guest') : currentUserAccount.fullName}
               </span>
               <button className="btn-outline-pill" onClick={logout}>
                 Sign Out

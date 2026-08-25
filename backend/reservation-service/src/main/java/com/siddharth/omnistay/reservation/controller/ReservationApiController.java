@@ -19,6 +19,7 @@ public class ReservationApiController {
     private final SuiteRepository suiteRepository;
     private final DiningRepository diningRepository;
     private final SpaRepository spaRepository;
+    private final ReviewRepository reviewRepository;
     private final BookingRepository bookingRepository;
     private final OccupiedRoomRepository occupiedRoomRepository;
     private final FolioTransactionRepository folioTransactionRepository;
@@ -29,6 +30,7 @@ public class ReservationApiController {
             SuiteRepository suiteRepository,
             DiningRepository diningRepository,
             SpaRepository spaRepository,
+            ReviewRepository reviewRepository,
             BookingRepository bookingRepository,
             OccupiedRoomRepository occupiedRoomRepository,
             FolioTransactionRepository folioTransactionRepository,
@@ -37,6 +39,7 @@ public class ReservationApiController {
         this.suiteRepository = suiteRepository;
         this.diningRepository = diningRepository;
         this.spaRepository = spaRepository;
+        this.reviewRepository = reviewRepository;
         this.bookingRepository = bookingRepository;
         this.occupiedRoomRepository = occupiedRoomRepository;
         this.folioTransactionRepository = folioTransactionRepository;
@@ -58,6 +61,11 @@ public class ReservationApiController {
     @GetMapping("/spa")
     public List<SpaEntity> getSpaServices() {
         return spaRepository.findAll();
+    }
+
+    @GetMapping("/reviews")
+    public List<ReviewEntity> getReviews() {
+        return reviewRepository.findAll();
     }
 
     // --- Pending Bookings ---

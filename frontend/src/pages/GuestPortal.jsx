@@ -7,7 +7,7 @@ import BrandLogo from '../components/BrandLogo';
 import CustomModal from '../components/CustomModal';
 
 const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
-  const { logout, userEmail, userPhone, currentUserAccount } = useAuth();
+  const { logout, userEmail, userPhone, currentUserAccount, updateUserProfile } = useAuth();
   const { diningItems, spaServices } = useHotelData();
   const { pendingBookings, activeRooms, activeFolios, pastStayHistory, addBookingRequest, addTransaction } = useFolioLedgers();
 
@@ -17,6 +17,27 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
   // Top-Right Profile Popover Menu State
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // Profile Edit State
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedNameInput, setEditedNameInput] = useState('');
+
+  // Compute exact guest display name (prioritizing user-entered full name or username)
+  const resolveGuestDisplayName = () => {
+    if (!currentUserAccount) return 'Guest';
+    const generic = ['Valued OmniStay Guest', 'Valued Guest', 'OmniStay Guest', 'Guest User'];
+    if (currentUserAccount.fullName && !generic.includes(currentUserAccount.fullName.trim())) {
+      return currentUserAccount.fullName;
+    }
+    if (currentUserAccount.username && currentUserAccount.username.toLowerCase() !== 'guest') {
+      return currentUserAccount.username;
+    }
+    if (userEmail && userEmail.includes('@')) {
+      return userEmail.split('@')[0];
+    }
+    return 'Guest';
+  };
+  const guestDisplayName = resolveGuestDisplayName();
 
   // Custom Modal Popup State
   const [modalConfig, setModalConfig] = useState({
@@ -60,13 +81,24 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
   // Booking Form State
   const [form, setForm] = useState({ 
-    name: currentUserAccount?.fullName || 'Siddharth K.', 
-    email: userEmail || 'guest@omnistay.com', 
-    phone: userPhone || '+1 (555) 234-5678', 
+    name: currentUserAccount?.fullName || currentUserAccount?.username || '', 
+    email: currentUserAccount?.email || userEmail || '', 
+    phone: currentUserAccount?.phone || userPhone || '', 
     checkIn: new Date().toISOString().split('T')[0], 
     checkOut: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], 
     roomType: 'Presidential Ocean Penthouse' 
   });
+
+  React.useEffect(() => {
+    if (currentUserAccount) {
+      setForm(prev => ({
+        ...prev,
+        name: currentUserAccount.fullName || currentUserAccount.username || prev.name,
+        email: currentUserAccount.email || userEmail || prev.email,
+        phone: currentUserAccount.phone || userPhone || prev.phone
+      }));
+    }
+  }, [currentUserAccount, userEmail, userPhone]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestSuccess, setRequestSuccess] = useState(false);
@@ -254,9 +286,6 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
     { title: 'Express Laundry & Dry Cleaning', desc: 'Same-day garment pressing & dry cleaning', icon: '👔', category: 'Valet' }
   ];
 
-  // Compute exact guest signup name
-  const guestDisplayName = currentUserAccount?.fullName || currentUserAccount?.username || form.name || 'Valued Guest';
-
   // If Guest is Not Signed In, show Luxury Sign-In Gateway Card
   if (!currentUserAccount) {
     return (
@@ -406,13 +435,50 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
               >
                 {/* Popover Header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '14px', borderBottom: '1px solid #E2E8F0', marginBottom: '14px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: '#0F172A', color: '#0084FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.1rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: '#0F172A', color: '#0084FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.1rem', flexShrink: 0 }}>
                     {guestDisplayName.charAt(0).toUpperCase()}
                   </div>
-                  <div style={{ overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 900, fontSize: '0.95rem', color: '#0F172A', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                      {guestDisplayName}
-                    </div>
+                  <div style={{ flex: 1, overflow: 'hidden' }}>
+                    {isEditingName ? (
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          className="form-input-custom"
+                          style={{ padding: '4px 8px', fontSize: '0.82rem', height: '28px', borderRadius: '6px' }}
+                          value={editedNameInput}
+                          onChange={(e) => setEditedNameInput(e.target.value)}
+                          placeholder="Enter display name"
+                          autoFocus
+                        />
+                        <button
+                          style={{ background: 'var(--primary-azure)', color: '#FFF', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
+                          onClick={() => {
+                            if (editedNameInput.trim()) {
+                              updateUserProfile({ fullName: editedNameInput.trim() });
+                            }
+                            setIsEditingName(false);
+                          }}
+                        >
+                          Save
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                        <div style={{ fontWeight: 900, fontSize: '0.95rem', color: '#0F172A', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                          {guestDisplayName}
+                        </div>
+                        <button
+                          style={{ background: 'none', border: 'none', color: 'var(--primary-azure)', fontSize: '0.72rem', cursor: 'pointer', fontWeight: 800, padding: 0 }}
+                          onClick={() => {
+                            setEditedNameInput(guestDisplayName);
+                            setIsEditingName(true);
+                          }}
+                          title="Edit Display Name"
+                        >
+                          ✏️ Edit
+                        </button>
+                      </div>
+                    )}
                     <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--primary-azure)', background: '#F0F9FF', padding: '2px 8px', borderRadius: '10px', display: 'inline-block', marginTop: '2px' }}>
                       VIP Executive Member
                     </span>
@@ -421,19 +487,25 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
                 {/* Account Details */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: '#64748B' }}>Account ID:</span>
-                    <strong style={{ color: '#0F172A' }}>{currentUserAccount?.accountId || 'GST-506324'}</strong>
+                    <strong style={{ color: '#0F172A', fontSize: '0.74rem', fontFamily: 'monospace', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={currentUserAccount?.accountId}>
+                      {currentUserAccount?.accountId || 'N/A'}
+                    </strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748B' }}>Username:</span>
+                    <strong style={{ color: '#0F172A' }}>{currentUserAccount?.username || 'N/A'}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#64748B' }}>Email:</span>
-                    <strong style={{ color: '#0F172A', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {userEmail || currentUserAccount?.email || form.email}
+                    <strong style={{ color: '#0F172A', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {currentUserAccount?.email || 'Not provided'}
                     </strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#64748B' }}>Phone:</span>
-                    <strong style={{ color: '#0F172A' }}>{userPhone || currentUserAccount?.phone || form.phone}</strong>
+                    <strong style={{ color: '#0F172A' }}>{currentUserAccount?.phone || 'Not provided'}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#64748B' }}>Active Suite:</span>
@@ -581,7 +653,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
               {/* Tile 1: Fine Dining */}
               <div 
                 className="white-card" 
-                style={{ borderRadius: '20px', padding: 0, overflow: 'hidden', cursor: 'pointer', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', transition: 'transform 0.2s ease' }}
+                style={{ borderRadius: '20px', padding: 0, overflow: 'hidden', cursor: 'pointer', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}
                 onClick={() => setActivePage('DINING')}
               >
                 <div style={{ height: '170px', overflow: 'hidden' }}>
@@ -599,7 +671,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
               {/* Tile 2: Spa */}
               <div 
                 className="white-card" 
-                style={{ borderRadius: '20px', padding: 0, overflow: 'hidden', cursor: 'pointer', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', transition: 'transform 0.2s ease' }}
+                style={{ borderRadius: '20px', padding: 0, overflow: 'hidden', cursor: 'pointer', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}
                 onClick={() => setActivePage('SPA')}
               >
                 <div style={{ height: '170px', overflow: 'hidden' }}>
@@ -617,7 +689,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
               {/* Tile 3: Butler Services */}
               <div 
                 className="white-card" 
-                style={{ borderRadius: '20px', padding: 0, overflow: 'hidden', cursor: 'pointer', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', transition: 'transform 0.2s ease' }}
+                style={{ borderRadius: '20px', padding: 0, overflow: 'hidden', cursor: 'pointer', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}
                 onClick={() => setActivePage('HOUSEKEEPING')}
               >
                 <div style={{ height: '170px', overflow: 'hidden' }}>
@@ -635,7 +707,7 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
               {/* Tile 4: Bookings & History */}
               <div 
                 className="white-card" 
-                style={{ borderRadius: '20px', padding: 0, overflow: 'hidden', cursor: 'pointer', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', transition: 'transform 0.2s ease' }}
+                style={{ borderRadius: '20px', padding: 0, overflow: 'hidden', cursor: 'pointer', border: '1px solid #E2E8F0', boxShadow: '0 10px 25px rgba(0,0,0,0.03)', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}
                 onClick={() => setActivePage('BOOKINGS_HISTORY')}
               >
                 <div style={{ height: '170px', overflow: 'hidden' }}>
@@ -846,20 +918,18 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
             {diningItems.map(dish => (
-              <div key={dish.id} className="white-card" style={{ padding: 0, borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ height: '200px', overflow: 'hidden', position: 'relative' }}>
-                    <img src={dish.image} alt={dish.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <span style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(4px)', color: '#FFFFFF', fontSize: '0.72rem', fontWeight: 800, padding: '4px 10px', borderRadius: '20px' }}>
-                      {dish.category}
-                    </span>
-                  </div>
-                  <div style={{ padding: '20px' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>{dish.name}</h3>
-                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.5' }}>{dish.description}</p>
-                  </div>
+              <div key={dish.id} className="white-card" style={{ padding: 0, borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ height: '200px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+                  <img src={dish.image} alt={dish.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(4px)', color: '#FFFFFF', fontSize: '0.72rem', fontWeight: 800, padding: '4px 10px', borderRadius: '20px' }}>
+                    {dish.category}
+                  </span>
                 </div>
-                <div style={{ padding: '0 20px 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
+                <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>{dish.name}</h3>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.5' }}>{dish.description}</p>
+                </div>
+                <div style={{ padding: '0 20px 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: 'auto' }}>
                   <span style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--primary-azure)' }}>${dish.price.toFixed(2)}</span>
                   <button className="btn-primary-azure" style={{ borderRadius: '30px', padding: '8px 18px', fontSize: '0.8rem' }} onClick={() => handleOrderDiningDish(dish)}>
                     + Order to Room
@@ -886,20 +956,18 @@ const GuestPortal = ({ onNavigateCatalog, onOpenAuthModal }) => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '24px' }}>
             {spaServices.map(spa => (
-              <div key={spa.id} className="white-card" style={{ padding: 0, borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ height: '220px', overflow: 'hidden', position: 'relative' }}>
-                    <img src={spa.image} alt={spa.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <span style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(4px)', color: '#38BDF8', fontSize: '0.72rem', fontWeight: 800, padding: '4px 10px', borderRadius: '20px' }}>
-                      {spa.duration}
-                    </span>
-                  </div>
-                  <div style={{ padding: '20px' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>{spa.title}</h3>
-                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.5' }}>{spa.description}</p>
-                  </div>
+              <div key={spa.id} className="white-card" style={{ padding: 0, borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ height: '220px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+                  <img src={spa.image} alt={spa.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(4px)', color: '#38BDF8', fontSize: '0.72rem', fontWeight: 800, padding: '4px 10px', borderRadius: '20px' }}>
+                    {spa.duration}
+                  </span>
                 </div>
-                <div style={{ padding: '0 20px 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
+                <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', fontWeight: 800, fontFamily: "'Playfair Display', 'Georgia', serif", color: '#0F172A' }}>{spa.title}</h3>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.5' }}>{spa.description}</p>
+                </div>
+                <div style={{ padding: '0 20px 20px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: 'auto' }}>
                   <span style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--primary-azure)' }}>${spa.price.toFixed(2)}</span>
                   <button className="btn-primary-azure" style={{ borderRadius: '30px', padding: '8px 18px', fontSize: '0.8rem' }} onClick={() => handleBookSpaPackage(spa)}>
                     + Book Spa Ritual

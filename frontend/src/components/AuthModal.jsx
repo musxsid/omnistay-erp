@@ -35,7 +35,8 @@ const AuthModal = ({ isOpen, onClose, defaultRole = 'GUEST' }) => {
   const [otpCode, setOtpCode] = useState('');
   const [activeOtpNotice, setActiveOtpNotice] = useState(null);
   
-  // Form State: Sign Up (Username, Email, Phone, Password, Terms)
+  // Form State: Sign Up (FullName, Username, Email, Phone, Password, Terms)
+  const [signupFullName, setSignupFullName] = useState('');
   const [signupUsername, setSignupUsername] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
@@ -52,6 +53,15 @@ const AuthModal = ({ isOpen, onClose, defaultRole = 'GUEST' }) => {
     setIsLoading(false);
     setOtpStep(false);
     setOtpCode('');
+    setIdentifier('');
+    setPassword('');
+    setPhone('');
+    setSignupFullName('');
+    setSignupUsername('');
+    setSignupEmail('');
+    setSignupPhone('');
+    setSignupPassword('');
+    setSignupTermsAccepted(false);
   };
 
   // Quick Demo Credentials Auto-Fill
@@ -156,6 +166,7 @@ const AuthModal = ({ isOpen, onClose, defaultRole = 'GUEST' }) => {
     setIsLoading(true);
 
     const res = await registerBackendUser({
+      fullName: signupFullName.trim() || signupUsername.trim(),
       username: signupUsername,
       email: signupEmail,
       phone: signupPhone,
@@ -391,7 +402,20 @@ const AuthModal = ({ isOpen, onClose, defaultRole = 'GUEST' }) => {
 
         {/* Error Banner */}
         {error && (
-          <div className="auth-error-banner" style={{ marginBottom: '14px', borderRadius: '8px', fontSize: '0.8rem' }}>
+          <div style={{
+            marginBottom: '14px',
+            padding: '10px 14px',
+            borderRadius: '10px',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            color: '#E11D48',
+            background: '#FFF1F2',
+            border: '1px solid #FFE4E6',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{ fontSize: '0.9rem' }}>⚠️</span>
             <span>{error}</span>
           </div>
         )}
@@ -537,22 +561,26 @@ const AuthModal = ({ isOpen, onClose, defaultRole = 'GUEST' }) => {
 
         {/* ==================== TAB 2: SIGN UP ==================== */}
         {activeTab === 'SIGN_UP' && (
-          <form onSubmit={handleBackendSignup} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <form onSubmit={handleBackendSignup} autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px', textTransform: 'uppercase' }}>Full Name / Display Name</label>
+              <input type="text" autoComplete="off" className="form-input-custom" placeholder="e.g. Siddharth Kumar (Defaults to Username)" value={signupFullName} onChange={e => setSignupFullName(e.target.value)} style={{ borderRadius: '8px' }} />
+            </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px', textTransform: 'uppercase' }}>Username *</label>
-              <input type="text" required className="form-input-custom" placeholder="Choose a username" value={signupUsername} onChange={e => setSignupUsername(e.target.value)} style={{ borderRadius: '8px' }} />
+              <input type="text" required autoComplete="off" className="form-input-custom" placeholder="Choose a username" value={signupUsername} onChange={e => setSignupUsername(e.target.value)} style={{ borderRadius: '8px' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px', textTransform: 'uppercase' }}>Email Address *</label>
-              <input type="email" required className="form-input-custom" placeholder="name@example.com" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} style={{ borderRadius: '8px' }} />
+              <input type="email" required autoComplete="off" className="form-input-custom" placeholder="name@example.com" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} style={{ borderRadius: '8px' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px', textTransform: 'uppercase' }}>Mobile Number *</label>
-              <input type="tel" required className="form-input-custom" placeholder="9876543210" value={signupPhone} onChange={e => setSignupPhone(e.target.value)} style={{ borderRadius: '8px' }} />
+              <input type="tel" required autoComplete="off" className="form-input-custom" placeholder="9876543210" value={signupPhone} onChange={e => setSignupPhone(e.target.value)} style={{ borderRadius: '8px' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '2px', textTransform: 'uppercase' }}>Password *</label>
-              <input type="password" required className="form-input-custom" placeholder="••••••••" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} style={{ borderRadius: '8px' }} />
+              <input type="password" required autoComplete="new-password" className="form-input-custom" placeholder="••••••••" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} style={{ borderRadius: '8px' }} />
             </div>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.75rem', color: '#64748B', marginTop: '4px' }}>
@@ -578,8 +606,8 @@ const AuthModal = ({ isOpen, onClose, defaultRole = 'GUEST' }) => {
         )}
 
         {/* Modal Footer */}
-        <div style={{ marginTop: '16px', paddingTop: '10px', borderTop: '1px solid #F1F5F9', fontSize: '0.72rem', color: '#94A3B8', textAlign: 'center' }}>
-          🔒 Encrypted Spring Boot Microservice Authentication
+        <div style={{ marginTop: '16px', paddingTop: '10px', borderTop: '1px solid #F1F5F9', fontSize: '0.72rem', color: '#94A3B8', textAlign: 'center', fontWeight: 600 }}>
+          🔒 End-to-End Encrypted Concierge Access
         </div>
       </div>
     </div>

@@ -274,7 +274,7 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
           </div>
 
           {/* Auto-Rotating Heritage Image Carousel */}
-          <div style={{ height: '480px', overflow: 'hidden', position: 'relative', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ height: '480px', overflow: 'hidden', position: 'relative', border: '1px solid var(--border-subtle)', borderRadius: '20px' }}>
             <img 
               src={heritageGalleryImages[heritageIdx].url} 
               alt={heritageGalleryImages[heritageIdx].title}
@@ -320,13 +320,13 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
         <div className="horizontal-scroll-container" ref={suiteScrollRef}>
           {suites.map((suite) => (
             <div key={suite.id} className="carousel-card">
-              <div style={{ height: '260px', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ height: '260px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
                 <img src={suite.image} alt={suite.title} className="hover-zoom-img" />
                 <span className="status-pill available" style={{ position: 'absolute', top: '14px', right: '14px' }}>
                   {suite.category}
                 </span>
               </div>
-              <div style={{ padding: '24px' }}>
+              <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '6px' }}>
                   {suite.capacity} • {suite.size}
                 </div>
@@ -335,7 +335,7 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
                   {suite.description}
                 </p>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', marginTop: 'auto' }}>
                   <span style={{ fontSize: '0.82rem', color: 'var(--primary-azure)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     5-Star Luxury Suite
                   </span>
@@ -381,14 +381,14 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
                 style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)', cursor: 'pointer' }}
                 onClick={() => setSelectedDish(item)}
               >
-                <div style={{ height: '230px', overflow: 'hidden' }}>
+                <div style={{ height: '230px', overflow: 'hidden', flexShrink: 0 }}>
                   <img src={item.image} alt={item.name} className="hover-zoom-img" />
                 </div>
-                <div style={{ padding: '24px' }}>
+                <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <span style={{ fontSize: '0.72rem', color: '#38BDF8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{item.category}</span>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginTop: '6px', marginBottom: '10px', color: '#FFFFFF' }}>{item.name}</h3>
                   <p style={{ color: '#94A3B8', fontSize: '0.85rem', lineHeight: '1.55', marginBottom: '20px' }}>{item.description}</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: 'auto' }}>
                     <span style={{ fontSize: '0.82rem', color: '#38BDF8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Chef Signature</span>
                     <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 700 }}>Inspect Dish →</span>
                   </div>
@@ -403,7 +403,7 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
       <section style={{ background: '#FFFFFF', padding: '120px 40px', borderTop: '1px solid var(--border-subtle)' }} id="concierge-section">
         <div style={{ maxWidth: '1320px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
           {/* Auto-Rotating Superyacht & Helipad Gallery (No Scuba Diving Photos) */}
-          <div style={{ height: '460px', overflow: 'hidden', position: 'relative', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ height: '460px', overflow: 'hidden', position: 'relative', border: '1px solid var(--border-subtle)', borderRadius: '20px' }}>
             <img 
               src={yachtHelipadImages[yachtIdx].url} 
               alt={yachtHelipadImages[yachtIdx].title}
@@ -465,17 +465,17 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
             {spaServices.map(spa => (
-              <div key={spa.id} className="white-card" style={{ padding: '0', overflow: 'hidden', display: 'flex' }}>
-                <div style={{ width: '42%', height: '100%', minHeight: '200px' }}>
-                  <img src={spa.image} alt={spa.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div key={spa.id} className="white-card" style={{ padding: '0', overflow: 'hidden', display: 'flex', minHeight: '220px', alignItems: 'stretch', borderRadius: '16px' }}>
+                <div style={{ width: '38%', flexShrink: 0 }}>
+                  <img src={spa.image} alt={spa.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
-                <div style={{ width: '58%', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div style={{ width: '62%', padding: '20px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
                   <div>
                     <span className="status-pill blue">{spa.duration}</span>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginTop: '8px', marginBottom: '8px' }}>{spa.title}</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>{spa.description}</p>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginTop: '8px', marginBottom: '8px', color: 'var(--text-main)' }}>{spa.title}</h3>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{spa.description}</p>
                   </div>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--primary-azure)', fontWeight: 800, textTransform: 'uppercase', marginTop: '16px', letterSpacing: '0.6px' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--primary-azure)', fontWeight: 800, textTransform: 'uppercase', marginTop: '12px', letterSpacing: '0.6px' }}>
                     Complimentary Sanctuary Spa
                   </span>
                 </div>
@@ -556,7 +556,7 @@ const LandingPage = ({ onOpenAuth, onNavigateCatalog }) => {
         <div style={{ maxWidth: '1320px', margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '48px', marginBottom: '50px' }}>
           <div>
             <div style={{ marginBottom: '16px' }}>
-              <BrandLogo subtitle="LUXURY COLLECTION" />
+              <BrandLogo darkMode={true} subtitle="LUXURY COLLECTION" />
             </div>
             <p style={{ fontSize: '0.88rem', lineHeight: '1.65', maxWidth: '340px' }}>
               A century of unrivaled luxury accommodations, Michelin fine dining, private lagoon sanctuaries, and coastal chopper arrivals.
